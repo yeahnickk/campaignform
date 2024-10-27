@@ -70,87 +70,94 @@ const HomePage = ({ onSelectForm, onSearch }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-8">
-      <div className="max-w-4xl w-full space-y-8">
-        <div className="text-center space-y-4">
-          <h1 className="text-4xl font-bold text-gray-900">Campaign Form Generator</h1>
-          <p className="text-lg text-gray-600">Select the type of form you want to generate or search for an existing campaign</p>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-6">
-          <div 
-            className="bg-white p-6 space-y-4 rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer"
-            onClick={() => onSelectForm('edm')}
-          >
-            <div className="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center">
-              <Mail className="h-6 w-6 text-blue-600" />
-            </div>
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">EDM</h2>
-              <p className="text-sm text-gray-600 mt-2">Generate email templates for your EDM campaigns</p>
-            </div>
-            <div className="flex items-center text-blue-600">
-              <span className="text-sm font-medium">Get started</span>
-              <ArrowRight className="h-4 w-4 ml-2" />
-            </div>
+    <Layout currentPage="Home" onNavigate={() => {}}>
+      <div className="flex-grow flex items-center justify-center">
+        <div className="max-w-4xl w-full space-y-8">
+          <div className="text-center space-y-4">
+            <h1 className="text-4xl font-bold text-gray-900">Campaign Form Generator</h1>
+            <p className="text-lg text-gray-600">Select the type of form you want to generate or search for an existing campaign</p>
           </div>
 
-          <div className="bg-white p-6 space-y-4 rounded-lg shadow opacity-75">
-            <div className="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center">
-              <Clock className="h-6 w-6 text-green-600" />
-            </div>
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">WOT</h2>
-              <p className="text-sm text-gray-600 mt-2">Coming soon: Generate WOT documentation</p>
-            </div>
-            <div className="flex items-center text-green-600">
-              <span className="text-sm font-medium">Coming soon</span>
-              <ArrowRight className="h-4 w-4 ml-2" />
-            </div>
-          </div>
-
-          <div className="bg-white p-6 space-y-4 rounded-lg shadow opacity-75">
-            <div className="h-12 w-12 bg-purple-100 rounded-lg flex items-center justify-center">
-              <FileText className="h-6 w-6 text-purple-600" />
-            </div>
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">Other</h2>
-              <p className="text-sm text-gray-600 mt-2">Coming soon: Additional form types</p>
-            </div>
-            <div className="flex items-center text-purple-600">
-              <span className="text-sm font-medium">Coming soon</span>
-              <ArrowRight className="h-4 w-4 ml-2" />
-            </div>
-          </div>
-        </div>
-        <div className="mt-8">
-          <form onSubmit={handleSearch} className="flex items-center">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Enter Campaign ID"
-              className="flex-grow px-4 py-2 border rounded-l focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <button
-              type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-r hover:bg-blue-700 transition-colors"
+          <div className="grid md:grid-cols-3 gap-6">
+            <div 
+              className="bg-white p-6 space-y-4 rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => onSelectForm('edm')}
             >
-              Search
-            </button>
-          </form>
+              <div className="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <Mail className="h-6 w-6 text-blue-600" />
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900">EDM</h2>
+                <p className="text-sm text-gray-600 mt-2">Generate email templates for your EDM campaigns</p>
+              </div>
+              <div className="flex items-center text-blue-600">
+                <span className="text-sm font-medium">Get started</span>
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </div>
+            </div>
+
+            <div className="bg-white p-6 space-y-4 rounded-lg shadow opacity-75">
+              <div className="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center">
+                <Clock className="h-6 w-6 text-green-600" />
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900">WOT</h2>
+                <p className="text-sm text-gray-600 mt-2">Coming soon: Generate WOT documentation</p>
+              </div>
+              <div className="flex items-center text-green-600">
+                <span className="text-sm font-medium">Coming soon</span>
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </div>
+            </div>
+
+            <div className="bg-white p-6 space-y-4 rounded-lg shadow opacity-75">
+              <div className="h-12 w-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                <FileText className="h-6 w-6 text-purple-600" />
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900">Other</h2>
+                <p className="text-sm text-gray-600 mt-2">Coming soon: Additional form types</p>
+              </div>
+              <div className="flex items-center text-purple-600">
+                <span className="text-sm font-medium">Coming soon</span>
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </div>
+            </div>
+          </div>
+          <div className="mt-8">
+            <form onSubmit={handleSearch} className="flex items-center">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Enter Campaign ID"
+                className="flex-grow px-4 py-2 border rounded-l focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button
+                type="submit"
+                className="px-4 py-2 bg-blue-600 text-white rounded-r hover:bg-blue-700 transition-colors"
+              >
+                Search
+              </button>
+            </form>
+          </div>
         </div>
       </div>
-    </div>
+    </Layout>
   );
 };
 
 const PartnerSelection = ({ onSelectPartner, onNavigate }) => {
   const partners = ['Coles', 'Kmart', 'Target'];
 
+  const handleSelectPartner = (partner) => {
+    setSelectedPartner(partner);
+    setFormData({ cmPartner: partner }); // Initialize formData
+    setCurrentPage('template');
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col p-8">
-      <Breadcrumbs currentPage="Select Partner" onNavigate={onNavigate} />
+    <Layout currentPage="Select Partner" onNavigate={onNavigate}>
       <div className="max-w-4xl w-full mx-auto space-y-8">
         <div className="text-center space-y-4">
           <h1 className="text-4xl font-bold text-gray-900">Select Partner</h1>
@@ -179,7 +186,7 @@ const PartnerSelection = ({ onSelectPartner, onNavigate }) => {
           ))}
         </div>
       </div>
-    </div>
+    </Layout>
   );
 };
 
@@ -195,8 +202,7 @@ const TemplateSelection = ({ partner, onSelectTemplate, onNavigate }) => {
     : [1, 2, 3, 4, 5].map(id => ({ id, name: `Template ${id}` }));
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col p-8">
-      <Breadcrumbs currentPage="Select Template" partner={partner} onNavigate={onNavigate} />
+    <Layout currentPage="Select Template" partner={partner} onNavigate={onNavigate}>
       <div className="max-w-4xl w-full mx-auto space-y-8">
         <div className="text-center space-y-4">
           <h1 className="text-4xl font-bold text-gray-900">Select Template for {partner}</h1>
@@ -208,7 +214,7 @@ const TemplateSelection = ({ partner, onSelectTemplate, onNavigate }) => {
             <div 
               key={template.id}
               className="bg-white p-6 space-y-4 rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer"
-              onClick={() => onSelectTemplate(template.id)}
+              onClick={() => onSelectTemplate(template)}
             >
               <div className="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center">
                 <FileText className="h-6 w-6 text-blue-600" />
@@ -225,7 +231,7 @@ const TemplateSelection = ({ partner, onSelectTemplate, onNavigate }) => {
           ))}
         </div>
       </div>
-    </div>
+    </Layout>
   );
 };
 
@@ -255,7 +261,7 @@ const Breadcrumbs = ({ currentPage, partner, template, onNavigate }) => {
             </div>
           </li>
         )}
-        <li>
+        <li aria-current="page">
           <div className="flex items-center">
             <ChevronRight className="w-4 h-4 text-gray-400" />
             <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2">{currentPage}</span>
@@ -266,316 +272,204 @@ const Breadcrumbs = ({ currentPage, partner, template, onNavigate }) => {
   );
 };
 
+const DataTeamView = ({ formData, handleInputChange }) => {
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Target Audience</label>
+        <input
+          type="text"
+          value={formData.targetAudience || ''}
+          onChange={(e) => handleInputChange('targetAudience', e.target.value)}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+          placeholder="e.g., Flybuys members aged 25-45"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Segment Criteria</label>
+        <textarea
+          value={formData.segmentCriteria || ''}
+          onChange={(e) => handleInputChange('segmentCriteria', e.target.value)}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+          rows="4"
+          placeholder="Describe the criteria for segmenting the audience"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Exclusions</label>
+        <textarea
+          value={formData.exclusions || ''}
+          onChange={(e) => handleInputChange('exclusions', e.target.value)}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+          rows="4"
+          placeholder="List any exclusions from the target audience"
+        />
+      </div>
+    </div>
+  );
+};
+
+const IframeEmailPreview = ({ formData, partner, template }) => {
+  const iframeContent = `
+    <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+    <html xmlns="http://www.w3.org/1999/xhtml"
+          xmlns:v="urn:schemas-microsoft-com:vml"
+          xmlns:o="urn:schemas-microsoft-com:office:office"
+          xmlns:w="urn:schemas-microsoft-com:office:word">
+    <head>
+    <title>Flybuys</title>
+    <!-- DEFAULT META TAGS -->
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;500;700&display=swap" rel="stylesheet">
+    <style>
+      /* ... (include all the styles from the provided HTML) ... */
+    </style>
+    </head>
+    <body bgcolor="#ffffff" class="u-noPadding">
+      <!-- ... (include all the body content from the provided HTML) ... -->
+    </body>
+    </html>
+  `;
+
+  return (
+    <iframe
+      srcDoc={iframeContent}
+      title="Email Preview"
+      className="w-full h-full border-0"
+      sandbox="allow-scripts"
+    />
+  );
+};
+
 const FormApp = ({ onNavigate, partner, template, onSave, loadedCampaign }) => {
-  const [formData, setFormData] = useState({
-    campaignId: '',
-    cmDate: '',
-    cmPartner: partner || '',
-    lmsName: '',
-    dcsName: '',
-    bodyCopy: '',
-    subjectLine: ''
-  });
-
-  const [activeTab, setActiveTab] = useState('cm');
+  const [activeView, setActiveView] = useState(loadedCampaign ? 'form' : 'campaignId');
+  const [formData, setFormData] = useState(loadedCampaign || { cmPartner: partner, templateId: template.id, templateName: template.name });
   const [showSaveNotification, setShowSaveNotification] = useState(false);
-  const [notificationMessage, setNotificationMessage] = useState('');
-
-  useEffect(() => {
-    if (loadedCampaign) {
-      setFormData(loadedCampaign);
-    }
-  }, [loadedCampaign]);
 
   const handleInputChange = (field, value) => {
-    if (field === 'campaignId') {
-      // Remove any spaces from the Campaign ID
-      value = value.replace(/\s+/g, '');
-      
-      // Check if a campaign with this ID already exists
-      const existingCampaign = localStorage.getItem(`campaign_${value}`);
-      if (existingCampaign) {
-        setNotificationMessage('Warning: A campaign with this ID already exists.');
-        setShowSaveNotification(true);
-        setTimeout(() => setShowSaveNotification(false), 3000);
-      }
-    }
-
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setFormData(prevData => ({ ...prevData, [field]: value }));
   };
 
   const handleSave = () => {
-    if (!validateCampaignId(formData.campaignId)) {
-      setNotificationMessage('Invalid Campaign ID. Please use only letters, numbers, hyphens, and underscores.');
-      setShowSaveNotification(true);
-      setTimeout(() => setShowSaveNotification(false), 3000);
-      return;
-    }
-
-    const key = `campaign_${formData.campaignId}`;
-    const existingCampaign = localStorage.getItem(key);
-
-    if (existingCampaign) {
-      const overwrite = window.confirm('A campaign with this ID already exists. Do you want to overwrite it?');
-      if (!overwrite) {
-        setNotificationMessage('Save cancelled. Please use a different Campaign ID.');
-        setShowSaveNotification(true);
-        setTimeout(() => setShowSaveNotification(false), 3000);
-        return;
-      }
-      setNotificationMessage('Existing campaign overwritten successfully!');
-    } else {
-      setNotificationMessage('Campaign saved successfully!');
-    }
-
-    localStorage.setItem(key, JSON.stringify(formData));
-    onSave(formData);
-    
+    const campaignData = {
+      ...formData,
+      lastUpdated: new Date().toISOString()
+    };
+    localStorage.setItem(`campaign_${formData.campaignId}`, JSON.stringify(campaignData));
+    onSave(campaignData);
     setShowSaveNotification(true);
     setTimeout(() => setShowSaveNotification(false), 3000);
   };
 
-  const escapeHtml = (unsafe) => {
-    return unsafe
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
-  };
-
-  const renderEmailPreview = () => {
-    let templateContent = '';
-    
-    if (partner === 'Coles') {
-      switch (template) {
-        case 1:
-          templateContent = `
-            <h2>Standard Marketing Campaign</h2>
-            <p>This is a preview of a standard marketing campaign for Coles.</p>
-          `;
-          break;
-        case 2:
-          templateContent = `
-            <h2>Transactional Campaign</h2>
-            <p>This is a preview of a transactional campaign for Coles.</p>
-          `;
-          break;
-        case 3:
-          templateContent = `
-            <h2>Solus Campaign</h2>
-            <p>This is a preview of a solus campaign for Coles.</p>
-          `;
-          break;
-        case 4:
-          templateContent = `
-            <h2>CEDM Campaign</h2>
-            <p>This is a preview of a CEDM campaign for Coles.</p>
-          `;
-          break;
-        case 5:
-          templateContent = `
-            <h2>API Triggered Communication</h2>
-            <p>This is a preview of an API triggered communication for Coles.</p>
-          `;
-          break;
-        default:
-          templateContent = `
-            <h2>Default Campaign</h2>
-            <p>Please select a valid template.</p>
-          `;
-      }
+  const handleCampaignIdSubmit = (e) => {
+    e.preventDefault();
+    if (validateCampaignId(formData.campaignId)) {
+      const initialCampaign = {
+        ...formData,
+        createdAt: new Date().toISOString(),
+        lastUpdated: new Date().toISOString()
+      };
+      localStorage.setItem(`campaign_${formData.campaignId}`, JSON.stringify(initialCampaign));
+      setActiveView('form');
+      setShowSaveNotification(true);
+      setTimeout(() => setShowSaveNotification(false), 3000);
     } else {
-      templateContent = `
-        <h2>Default Campaign</h2>
-        <p>This is a default campaign preview for ${escapeHtml(partner || '[Partner]')}.</p>
-      `;
+      alert('Please enter a valid Campaign ID');
     }
-
-    return (
-      <div className="flex-1 bg-white p-6">
-        <div className="mb-4">
-          <p className="text-sm text-gray-600">From: flybuys@edm.flybuys.com.au</p>
-          <p className="text-sm font-semibold">Subject: {escapeHtml(formData.subjectLine || 'Campaign Brief - [Subject]')}</p>
-        </div>
-        <div className="space-y-6">
-          <div className="text-sm text-gray-600">
-            Dear {escapeHtml(formData.cmPartner || '[Partner]')} team,
-          </div>
-          
-          <div className="text-sm text-gray-600">
-            I hope this email finds you well. Please find below the campaign brief details for our upcoming collaboration:
-          </div>
-          
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <h2 className="text-lg font-bold text-gray-800 mb-4">Campaign Details</h2>
-            <div className="space-y-2">
-              <p className="text-sm text-gray-600">Campaign ID: {escapeHtml(formData.campaignId || '[Campaign ID]')}</p>
-              <p className="text-sm text-gray-600">Partner: {escapeHtml(formData.cmPartner || '[Partner]')}</p>
-              <p className="text-sm text-gray-600">Date: {escapeHtml(formData.cmDate || '[Date]')}</p>
-              {formData.lmsName && <p className="text-sm text-gray-600">LMS Contact: {escapeHtml(formData.lmsName)}</p>}
-              {formData.dcsName && <p className="text-sm text-gray-600">DCS Contact: {escapeHtml(formData.dcsName)}</p>}
-            </div>
-          </div>
-          
-          <div 
-            className="text-sm text-gray-600 prose prose-sm max-w-none"
-            dangerouslySetInnerHTML={{ __html: templateContent }}
-          />
-          
-          <div 
-            className="text-sm text-gray-600 prose prose-sm max-w-none"
-            dangerouslySetInnerHTML={{ __html: formData.bodyCopy }}
-          />
-          
-          <div className="text-sm text-gray-600">
-            Please review the details above and let me know if you have any questions or need any clarification.
-          </div>
-          
-          <div className="text-sm text-gray-600">
-            Best regards,<br />
-            Campaign Manager
-          </div>
-        </div>
-      </div>
-    );
   };
+
+  if (activeView === 'campaignId') {
+    return (
+      <Layout currentPage="Enter Campaign ID" partner={partner} template={template.name} onNavigate={onNavigate}>
+        <div className="max-w-md mx-auto mt-10">
+          <form onSubmit={handleCampaignIdSubmit} className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+            <div className="mb-4">
+              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="campaignId">
+                Campaign ID
+              </label>
+              <input
+                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                id="campaignId"
+                type="text"
+                placeholder="Enter Campaign ID"
+                value={formData.campaignId || ''}
+                onChange={(e) => handleInputChange('campaignId', e.target.value)}
+                required
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <button
+                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                type="submit"
+              >
+                Continue
+              </button>
+            </div>
+          </form>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col pb-16">
-      <div className="max-w-[1920px] mx-auto p-8 space-y-8">
-        <div>
-          <Breadcrumbs currentPage="Campaign Brief" partner={partner} template={template} onNavigate={onNavigate} />
-        </div>
-        
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">
-            Campaign Brief - {formData.cmPartner} 
-            {partner === 'Coles' && ` - ${
-              template === 1 ? 'Standard Marketing Campaign' :
-              template === 2 ? 'Transactional Campaign' :
-              template === 3 ? 'Solus Campaign' :
-              template === 4 ? 'CEDM Campaign' :
-              template === 5 ? 'API Triggered Communication' :
-              'Unknown Template'
-            }`}
-          </h1>
-          <div>
+    <Layout currentPage="Campaign Brief" partner={partner} template={template.name} onNavigate={onNavigate}>
+      <div className="max-w-[1920px] w-full mx-auto space-y-8">
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex space-x-4">
             <button
-              onClick={handleSave}
-              className={'px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors'}
+              onClick={() => setActiveView('form')}
+              className={`px-4 py-2 rounded-md ${activeView === 'form' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
             >
-              Save
+              Form & Preview
             </button>
+            <button
+              onClick={() => setActiveView('data')}
+              className={`px-4 py-2 rounded-md ${activeView === 'data' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+            >
+              Data Team
+            </button>
+            {partner === 'Coles' && (
+              <button
+                onClick={() => setActiveView('offers')}
+                className={`px-4 py-2 rounded-md ${activeView === 'offers' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+              >
+                Offers
+              </button>
+            )}
           </div>
+          <button
+            onClick={handleSave}
+            className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+          >
+            Save Campaign
+          </button>
         </div>
 
-        <div className="grid grid-cols-12 gap-8">
-          <div className="col-span-4 space-y-4">
-            <div className="bg-white p-6 rounded-lg shadow">
-              <div className="flex space-x-4 mb-6">
-                <button
-                  className={`px-4 py-2 rounded-md ${activeTab === 'cm' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
-                  onClick={() => setActiveTab('cm')}
-                >
-                  CM
-                </button>
-                <button
-                  className={`px-4 py-2 rounded-md ${activeTab === 'dcs' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
-                  onClick={() => setActiveTab('dcs')}
-                >
-                  DCS
-                </button>
-                <button
-                  className={`px-4 py-2 rounded-md ${activeTab === 'lms' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
-                  onClick={() => setActiveTab('lms')}
-                >
-                  LMS
-                </button>
-              </div>
-
-              {activeTab === 'cm' && (
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">What is the Campaign ID?</label>
-                    <input
-                      type="text"
-                      value={formData.campaignId}
-                      onChange={(e) => handleInputChange('campaignId', e.target.value)}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">What is the date today?</label>
-                    <input
-                      type="date"
-                      value={formData.cmDate}
-                      onChange={(e) => handleInputChange('cmDate', e.target.value)}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Subject Line</label>
-                    <input
-                      type="text"
-                      value={formData.subjectLine}
-                      onChange={(e) => handleInputChange('subjectLine', e.target.value)}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Body Copy</label>
-                    <BasicHtmlEditor
-                      value={formData.bodyCopy}
-                      onChange={(value) => handleInputChange('bodyCopy', value)}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {activeTab === 'dcs' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">DCS Name</label>
-                  <input
-                    type="text"
-                    value={formData.dcsName}
-                    onChange={(e) => handleInputChange('dcsName', e.target.value)}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                  />
-                </div>
-              )}
-
-              {activeTab === 'lms' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">LMS Name</label>
-                  <input
-                    type="text"
-                    value={formData.lmsName}
-                    onChange={(e) => handleInputChange('lmsName', e.target.value)}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="col-span-8 space-y-4">
-            <h2 className="text-xl font-semibold text-gray-900">Email Preview</h2>
-            <div className="bg-white rounded-lg shadow h-[calc(100vh-12rem)] overflow-auto">
-              {renderEmailPreview()}
-            </div>
-          </div>
-        </div>
+        {activeView === 'form' && (
+          <FormView 
+            formData={formData} 
+            handleInputChange={handleInputChange} 
+          />
+        )}
+        {activeView === 'data' && (
+          <DataTeamView formData={formData} handleInputChange={handleInputChange} />
+        )}
+        {activeView === 'offers' && partner === 'Coles' && (
+          <OffersView formData={formData} handleInputChange={handleInputChange} />
+        )}
       </div>
       {showSaveNotification && (
         <div className="fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg save-notification">
-          {notificationMessage}
+          Campaign saved successfully!
         </div>
       )}
-    </div>
+    </Layout>
   );
 };
 
@@ -584,7 +478,6 @@ const SearchResults = ({ searchQuery, onLoadCampaign, onBack }) => {
   const [showDeleteNotification, setShowDeleteNotification] = useState(false);
 
   useEffect(() => {
-    // Function to fetch campaigns from localStorage
     const fetchCampaigns = () => {
       const campaigns = Object.keys(localStorage)
         .filter(key => key.startsWith('campaign_') && key.includes(searchQuery))
@@ -601,20 +494,15 @@ const SearchResults = ({ searchQuery, onLoadCampaign, onBack }) => {
   const handleDelete = (campaignId) => {
     if (window.confirm('Are you sure you want to delete this campaign?')) {
       localStorage.removeItem(`campaign_${campaignId}`);
-      
-      // Update results by filtering out the deleted campaign
       setResults(prevResults => prevResults.filter(campaign => campaign.id !== campaignId));
-      
-      // Show delete notification
       setShowDeleteNotification(true);
-      setTimeout(() => {
-        setShowDeleteNotification(false);
-      }, 3000);
+      setTimeout(() => setShowDeleteNotification(false), 3000);
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col p-8">
+      <Breadcrumbs currentPage="Search Results" onNavigate={onBack} />
       <div className="max-w-4xl w-full mx-auto space-y-8">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold text-gray-900">Search Results</h1>
@@ -634,9 +522,9 @@ const SearchResults = ({ searchQuery, onLoadCampaign, onBack }) => {
                 <div className="flex justify-between items-center">
                   <div>
                     <h2 className="text-xl font-semibold">{campaign.campaignId}</h2>
-                    <p className="text-gray-600">{campaign.cmPartner} - {campaign.cmDate}</p>
-                    <p className="text-gray-600">Subject: {campaign.subjectLine}</p>
-                    <p className="text-gray-600">LMS: {campaign.lmsName}, DCS: {campaign.dcsName}</p>
+                    <p className="text-gray-600">{campaign.cmPartner} - {campaign.templateName}</p>
+                    <p className="text-gray-600">Subject: {campaign.subjectLine || 'N/A'}</p>
+                    <p className="text-gray-600">Last Updated: {new Date(campaign.lastUpdated).toLocaleString()}</p>
                   </div>
                   <div className="space-x-2">
                     <button
@@ -673,12 +561,542 @@ const validateCampaignId = (id) => {
   return id.trim() !== '' && /^[A-Za-z0-9-_]+$/.test(id);
 };
 
+const Layout = ({ children, currentPage, partner, template, onNavigate }) => {
+  return (
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <div className="max-w-[1920px] w-full mx-auto p-8 flex flex-col flex-grow">
+        <Breadcrumbs 
+          currentPage={currentPage} 
+          partner={partner} 
+          template={template} 
+          onNavigate={onNavigate} 
+        />
+        <div className="mt-8 flex-grow flex flex-col">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const OffersView = ({ formData, handleInputChange }) => {
+  const offerCount = formData.offerCount || 0;
+
+  const renderOfferFields = (index) => (
+    <div key={index} className="border p-4 rounded-md mb-4">
+      <h3 className="text-lg font-semibold mb-2">Offer {index + 1}</h3>
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Offer Spend</label>
+          <input
+            type="text"
+            value={formData[`offerSpend${index}`] || ''}
+            onChange={(e) => handleInputChange(`offerSpend${index}`, e.target.value)}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Offer Get</label>
+          <input
+            type="text"
+            value={formData[`offerGet${index}`] || ''}
+            onChange={(e) => handleInputChange(`offerGet${index}`, e.target.value)}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Offer Title</label>
+          <input
+            type="text"
+            value={formData[`offerTitle${index}`] || ''}
+            onChange={(e) => handleInputChange(`offerTitle${index}`, e.target.value)}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Offer Start Date</label>
+          <input
+            type="date"
+            value={formData[`offerStartDate${index}`] || ''}
+            onChange={(e) => handleInputChange(`offerStartDate${index}`, e.target.value)}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Offer End Date</label>
+          <input
+            type="date"
+            value={formData[`offerEndDate${index}`] || ''}
+            onChange={(e) => handleInputChange(`offerEndDate${index}`, e.target.value)}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+          />
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700">How many offers?</label>
+        <select
+          value={offerCount}
+          onChange={(e) => handleInputChange('offerCount', parseInt(e.target.value))}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+        >
+          {[...Array(11).keys()].map(num => (
+            <option key={num} value={num}>{num}</option>
+          ))}
+        </select>
+      </div>
+      {[...Array(offerCount).keys()].map(renderOfferFields)}
+    </div>
+  );
+};
+
+const FormView = ({ formData, handleInputChange }) => {
+  const renderEmailPreview = () => {
+    const emailHTML = `
+      <!doctype html>
+      <html lang="en">
+        <head>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+          <title>${formData.subjectLine || 'Email Preview'}</title>
+          <style media="all" type="text/css">
+            /* -------------------------------------
+            GLOBAL RESETS
+            ------------------------------------- */
+            
+            body {
+              font-family: Helvetica, sans-serif;
+              -webkit-font-smoothing: antialiased;
+              font-size: 16px;
+              line-height: 1.3;
+              -ms-text-size-adjust: 100%;
+              -webkit-text-size-adjust: 100%;
+            }
+            
+            table {
+              border-collapse: separate;
+              mso-table-lspace: 0pt;
+              mso-table-rspace: 0pt;
+              width: 100%;
+            }
+            
+            table td {
+              font-family: Helvetica, sans-serif;
+              font-size: 16px;
+              vertical-align: top;
+            }
+            /* -------------------------------------
+            BODY & CONTAINER
+            ------------------------------------- */
+            
+            body {
+              background-color: #f4f5f6;
+              margin: 0;
+              padding: 0;
+            }
+            
+            .body {
+              background-color: #f4f5f6;
+              width: 100%;
+            }
+            
+            .container {
+              margin: 0 auto !important;
+              max-width: 600px;
+              padding: 0;
+              padding-top: 24px;
+              width: 600px;
+            }
+            
+            .content {
+              box-sizing: border-box;
+              display: block;
+              margin: 0 auto;
+              max-width: 600px;
+              padding: 0;
+            }
+            /* -------------------------------------
+            HEADER, FOOTER, MAIN
+            ------------------------------------- */
+            
+            .main {
+              background: #ffffff;
+              border: 1px solid #eaebed;
+              border-radius: 16px;
+              width: 100%;
+            }
+            
+            .wrapper {
+              box-sizing: border-box;
+              padding: 24px;
+            }
+            
+            .footer {
+              clear: both;
+              padding-top: 24px;
+              text-align: center;
+              width: 100%;
+            }
+            
+            .footer td,
+            .footer p,
+            .footer span,
+            .footer a {
+              color: #9a9ea6;
+              font-size: 16px;
+              text-align: center;
+            }
+            /* -------------------------------------
+            TYPOGRAPHY
+            ------------------------------------- */
+            
+            p {
+              font-family: Helvetica, sans-serif;
+              font-size: 16px;
+              font-weight: normal;
+              margin: 0;
+              margin-bottom: 16px;
+            }
+            
+            a {
+              color: #0867ec;
+              text-decoration: underline;
+            }
+            /* -------------------------------------
+            BUTTONS
+            ------------------------------------- */
+            
+            .btn {
+              box-sizing: border-box;
+              min-width: 100% !important;
+              width: 100%;
+            }
+            
+            .btn > tbody > tr > td {
+              padding-bottom: 16px;
+            }
+            
+            .btn table {
+              width: auto;
+            }
+            
+            .btn table td {
+              background-color: #ffffff;
+              border-radius: 4px;
+              text-align: center;
+            }
+            
+            .btn a {
+              background-color: #ffffff;
+              border: solid 2px #0867ec;
+              border-radius: 4px;
+              box-sizing: border-box;
+              color: #0867ec;
+              cursor: pointer;
+              display: inline-block;
+              font-size: 16px;
+              font-weight: bold;
+              margin: 0;
+              padding: 12px 24px;
+              text-decoration: none;
+              text-transform: capitalize;
+            }
+            
+            .btn-primary table td {
+              background-color: #0867ec;
+            }
+            
+            .btn-primary a {
+              background-color: #0867ec;
+              border-color: #0867ec;
+              color: #ffffff;
+            }
+            
+            @media all {
+              .btn-primary table td:hover {
+                background-color: #ec0867 !important;
+              }
+              .btn-primary a:hover {
+                background-color: #ec0867 !important;
+                border-color: #ec0867 !important;
+              }
+            }
+            
+            /* -------------------------------------
+            OTHER STYLES THAT MIGHT BE USEFUL
+            ------------------------------------- */
+            
+            .last {
+              margin-bottom: 0;
+            }
+            
+            .first {
+              margin-top: 0;
+            }
+            
+            .align-center {
+              text-align: center;
+            }
+            
+            .align-right {
+              text-align: right;
+            }
+            
+            .align-left {
+              text-align: left;
+            }
+            
+            .text-link {
+              color: #0867ec !important;
+              text-decoration: underline !important;
+            }
+            
+            .clear {
+              clear: both;
+            }
+            
+            .mt0 {
+              margin-top: 0;
+            }
+            
+            .mb0 {
+              margin-bottom: 0;
+            }
+            
+            .preheader {
+              color: transparent;
+              display: none;
+              height: 0;
+              max-height: 0;
+              max-width: 0;
+              opacity: 0;
+              overflow: hidden;
+              mso-hide: all;
+              visibility: hidden;
+              width: 0;
+            }
+            
+            .powered-by a {
+              text-decoration: none;
+            }
+            
+            /* -------------------------------------
+            RESPONSIVE AND MOBILE FRIENDLY STYLES
+            ------------------------------------- */
+            
+            @media only screen and (max-width: 640px) {
+              .main p,
+              .main td,
+              .main span {
+                font-size: 16px !important;
+              }
+              .wrapper {
+                padding: 8px !important;
+              }
+              .content {
+                padding: 0 !important;
+              }
+              .container {
+                padding: 0 !important;
+                padding-top: 8px !important;
+                width: 100% !important;
+              }
+              .main {
+                border-left-width: 0 !important;
+                border-radius: 0 !important;
+                border-right-width: 0 !important;
+              }
+              .btn table {
+                max-width: 100% !important;
+                width: 100% !important;
+              }
+              .btn a {
+                font-size: 16px !important;
+                max-width: 100% !important;
+                width: 100% !important;
+              }
+            }
+            /* -------------------------------------
+            PRESERVE THESE STYLES IN THE HEAD
+            ------------------------------------- */
+            
+            @media all {
+              .ExternalClass {
+                width: 100%;
+              }
+              .ExternalClass,
+              .ExternalClass p,
+              .ExternalClass span,
+              .ExternalClass font,
+              .ExternalClass td,
+              .ExternalClass div {
+                line-height: 100%;
+              }
+              .apple-link a {
+                color: inherit !important;
+                font-family: inherit !important;
+                font-size: inherit !important;
+                font-weight: inherit !important;
+                line-height: inherit !important;
+                text-decoration: none !important;
+              }
+              #MessageViewBody a {
+                color: inherit;
+                text-decoration: none;
+                font-size: inherit;
+                font-family: inherit;
+                font-weight: inherit;
+                line-height: inherit;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <table role="presentation" border="0" cellpadding="0" cellspacing="0" class="body">
+            <tr>
+              <td>&nbsp;</td>
+              <td class="container">
+                <div class="content">
+                  <div style="background-color: #f3f3f3; padding: 10px; margin-bottom: 20px; border-radius: 5px;">
+                    <strong>Subject:</strong> ${formData.subjectLine || 'No subject'}
+                  </div>
+                  <span class="preheader">${formData.previewText || 'This is preheader text. Some clients will show this text as a preview.'}</span>
+                  <table role="presentation" border="0" cellpadding="0" cellspacing="0" class="main">
+                    <tr>
+                      <td class="wrapper">
+                        ${formData.emailContent || `
+                          <p>Hi there</p>
+                          <p>Sometimes you just want to send a simple HTML email with a simple design and clear call to action. This is it.</p>
+                          <table role="presentation" border="0" cellpadding="0" cellspacing="0" class="btn btn-primary">
+                            <tbody>
+                              <tr>
+                                <td align="left">
+                                  <table role="presentation" border="0" cellpadding="0" cellspacing="0">
+                                    <tbody>
+                                      <tr>
+                                        <td> <a href="http://htmlemail.io" target="_blank">Call To Action</a> </td>
+                                      </tr>
+                                    </tbody>
+                                  </table>
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                          <p>This is a really simple email template. Its sole purpose is to get the recipient to click the button with no distractions.</p>
+                          <p>Good luck! Hope it works.</p>
+                        `}
+                      </td>
+                    </tr>
+                  </table>
+                  <div class="footer">
+                    <table role="presentation" border="0" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td class="content-block">
+                          <span class="apple-link">${formData.companyAddress || 'Company Inc, 7-11 Commercial Ct, Belfast BT1 2NB'}</span>
+                          <br> Don't like these emails? <a href="http://htmlemail.io/blog">Unsubscribe</a>.
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="content-block powered-by">
+                          Powered by <a href="http://htmlemail.io">HTMLemail.io</a>
+                        </td>
+                      </tr>
+                    </table>
+                  </div>
+                </div>
+              </td>
+              <td>&nbsp;</td>
+            </tr>
+          </table>
+        </body>
+      </html>
+    `;
+
+    return (
+      <iframe
+        srcDoc={emailHTML}
+        style={{ width: '100%', height: '600px', border: 'none' }}
+        title="Email Preview"
+      />
+    );
+  };
+
+  return (
+    <div className="grid grid-cols-12 gap-8">
+      <div className="col-span-4 space-y-4">
+        <div className="bg-white p-6 rounded-lg shadow">
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Campaign ID</label>
+              <input
+                type="text"
+                value={formData.campaignId || ''}
+                onChange={(e) => handleInputChange('campaignId', e.target.value)}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Campaign Name</label>
+              <input
+                type="text"
+                value={formData.campaignName || ''}
+                onChange={(e) => handleInputChange('campaignName', e.target.value)}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Preview Text</label>
+              <input
+                type="text"
+                value={formData.previewText || ''}
+                onChange={(e) => handleInputChange('previewText', e.target.value)}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Email Content</label>
+              <textarea
+                value={formData.emailContent || ''}
+                onChange={(e) => handleInputChange('emailContent', e.target.value)}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                rows="10"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Subject Line</label>
+              <input
+                type="text"
+                value={formData.subjectLine || ''}
+                onChange={(e) => handleInputChange('subjectLine', e.target.value)}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+              />
+            </div>
+            {/* Add more form fields as needed */}
+          </div>
+          {/* The "Save Campaign" button has been removed from here */}
+        </div>
+      </div>
+      <div className="col-span-8">
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h2 className="text-xl font-semibold mb-4">Email Preview</h2>
+          {renderEmailPreview()}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const App = () => {
   const [currentPage, setCurrentPage] = useState('home');
   const [selectedPartner, setSelectedPartner] = useState(null);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [loadedCampaign, setLoadedCampaign] = useState(null);
+  const [formData, setFormData] = useState({ cmPartner: '' });
 
   const handleSelectForm = (formType) => {
     if (formType === 'edm') {
@@ -688,11 +1106,15 @@ const App = () => {
 
   const handleSelectPartner = (partner) => {
     setSelectedPartner(partner);
+    setFormData({ cmPartner: partner }); // Initialize formData
     setCurrentPage('template');
   };
 
   const handleSelectTemplate = (template) => {
-    setSelectedTemplate(template);
+    setSelectedTemplate({
+      id: template.id,
+      name: template.name
+    });
     setCurrentPage('form');
   };
 
@@ -702,8 +1124,6 @@ const App = () => {
       setSelectedPartner(null);
       setSelectedTemplate(null);
     } else if (page === 'partner') {
-      setSelectedTemplate(null);
-    } else if (page === 'template') {
       setSelectedTemplate(null);
     }
   };
@@ -716,12 +1136,12 @@ const App = () => {
   const handleLoadCampaign = (campaign) => {
     setLoadedCampaign(campaign);
     setSelectedPartner(campaign.cmPartner);
-    setSelectedTemplate(1); // Assuming a default template
+    setSelectedTemplate({ id: campaign.templateId, name: campaign.templateName });
     setCurrentPage('form');
   };
 
   const handleSaveCampaign = (campaign) => {
-    // You can add additional logic here if needed
+    // This function is now handled within the FormApp component
     console.log('Campaign saved:', campaign);
   };
 
@@ -734,7 +1154,7 @@ const App = () => {
         <SearchResults
           searchQuery={searchQuery}
           onLoadCampaign={handleLoadCampaign}
-          onBack={() => setCurrentPage('home')}
+          onBack={() => handleNavigate('home')}
         />
       )}
       {currentPage === 'partner' && (
