@@ -450,7 +450,7 @@ const FormApp = ({ onNavigate, partner, template, onSave, loadedCampaign }) => {
           <div>
             <button
               onClick={handleExport}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors mr-2"
+              className={'px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors mr-2'}
             >
               Export
             </button>
