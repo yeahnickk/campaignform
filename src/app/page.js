@@ -550,20 +550,26 @@ const SearchResults = ({ searchQuery, onLoadCampaign, onBack }) => {
   const [showDeleteNotification, setShowDeleteNotification] = useState(false);
 
   useEffect(() => {
-    // Search for campaigns in localStorage
-    const campaigns = Object.keys(localStorage)
-      .filter(key => key.startsWith('campaign_') && key.includes(searchQuery))
-      .map(key => {
-        const campaign = JSON.parse(localStorage.getItem(key));
-        return { id: key.replace('campaign_', ''), ...campaign };
-      });
-    setResults(campaigns);
+    // Function to fetch campaigns from localStorage
+    const fetchCampaigns = () => {
+      const campaigns = Object.keys(localStorage)
+        .filter(key => key.startsWith('campaign_') && key.includes(searchQuery))
+        .map(key => {
+          const campaign = JSON.parse(localStorage.getItem(key));
+          return { id: key.replace('campaign_', ''), ...campaign };
+        });
+      setResults(campaigns);
+    };
+
+    fetchCampaigns();
   }, [searchQuery]);
 
   const handleDelete = (campaignId) => {
     if (window.confirm('Are you sure you want to delete this campaign?')) {
       localStorage.removeItem(`campaign_${campaignId}`);
-      setResults(results.filter(campaign => campaign.id !== campaignId));
+      
+      // Update results by filtering out the deleted campaign
+      setResults(prevResults => prevResults.filter(campaign => campaign.id !== campaignId));
       
       // Show delete notification
       setShowDeleteNotification(true);
