@@ -349,7 +349,12 @@ const IframeEmailPreview = ({ formData, partner, template }) => {
 
 const FormApp = ({ onNavigate, partner, template, onSave, loadedCampaign }) => {
   const [activeView, setActiveView] = useState(loadedCampaign ? 'form' : 'campaignId');
-  const [formData, setFormData] = useState(loadedCampaign || { cmPartner: partner, templateId: template.id, templateName: template.name });
+  const [formData, setFormData] = useState(loadedCampaign || { 
+    cmPartner: partner, 
+    templateId: template.id, 
+    templateName: template.name,
+    offerCount: 0 // Initialize offerCount for all partners
+  });
   const [showSaveNotification, setShowSaveNotification] = useState(false);
 
   const handleInputChange = (field, value) => {
@@ -429,34 +434,41 @@ const FormApp = ({ onNavigate, partner, template, onSave, loadedCampaign }) => {
   return (
     <Layout currentPage="Campaign Brief" partner={partner} template={template.name} onNavigate={onNavigate}>
       <div className="max-w-[1920px] w-full mx-auto space-y-8">
-        <div className="flex justify-between items-center mb-4">
-          <div className="flex space-x-4">
+        {/* Header section */}
+        <div className="bg-white shadow-md rounded-lg p-6 mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Campaign Brief</h1>
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-lg text-gray-600">Campaign ID: <span className="font-semibold">{formData.campaignId}</span></p>
+              <p className="text-lg text-gray-600">Template: <span className="font-semibold">{template.name}</span></p>
+            </div>
             <button
-              onClick={() => setActiveView('form')}
-              className={`px-4 py-2 rounded-md ${activeView === 'form' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+              onClick={handleSave}
+              className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
             >
-              Form & Preview
+              Save Campaign
             </button>
-            <button
-              onClick={() => setActiveView('data')}
-              className={`px-4 py-2 rounded-md ${activeView === 'data' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
-            >
-              Data Team
-            </button>
-            {partner === 'Coles' && (
-              <button
-                onClick={() => setActiveView('offers')}
-                className={`px-4 py-2 rounded-md ${activeView === 'offers' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
-              >
-                Offers
-              </button>
-            )}
           </div>
+        </div>
+
+        <div className="flex space-x-4 mb-4">
           <button
-            onClick={handleSave}
-            className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+            onClick={() => setActiveView('form')}
+            className={`px-4 py-2 rounded-md ${activeView === 'form' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
           >
-            Save Campaign
+            Form & Preview
+          </button>
+          <button
+            onClick={() => setActiveView('data')}
+            className={`px-4 py-2 rounded-md ${activeView === 'data' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+          >
+            Data Team
+          </button>
+          <button
+            onClick={() => setActiveView('offers')}
+            className={`px-4 py-2 rounded-md ${activeView === 'offers' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+          >
+            Offers
           </button>
         </div>
 
@@ -469,7 +481,7 @@ const FormApp = ({ onNavigate, partner, template, onSave, loadedCampaign }) => {
         {activeView === 'data' && (
           <DataTeamView formData={formData} handleInputChange={handleInputChange} />
         )}
-        {activeView === 'offers' && partner === 'Coles' && (
+        {activeView === 'offers' && (
           <OffersView formData={formData} handleInputChange={handleInputChange} />
         )}
       </div>
@@ -489,7 +501,7 @@ const SearchResults = ({ searchQuery, onLoadCampaign, onBack }) => {
   useEffect(() => {
     const fetchCampaigns = () => {
       const campaigns = Object.keys(localStorage)
-        .filter(key => key.startsWith('campaign_') && key.includes(searchQuery))
+        .filter(key => key.startsWith('campaign_') && key.toLowerCase().includes(searchQuery.toLowerCase()))
         .map(key => {
           const campaign = JSON.parse(localStorage.getItem(key));
           return { id: key.replace('campaign_', ''), ...campaign };
