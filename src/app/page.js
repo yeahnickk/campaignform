@@ -279,6 +279,7 @@ const FormApp = ({ onNavigate, partner, template, onSave, loadedCampaign }) => {
 
   const [activeTab, setActiveTab] = useState('cm');
   const [showSaveNotification, setShowSaveNotification] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState('');
 
   useEffect(() => {
     if (loadedCampaign) {
@@ -287,6 +288,19 @@ const FormApp = ({ onNavigate, partner, template, onSave, loadedCampaign }) => {
   }, [loadedCampaign]);
 
   const handleInputChange = (field, value) => {
+    if (field === 'campaignId') {
+      // Remove any spaces from the Campaign ID
+      value = value.replace(/\s+/g, '');
+      
+      // Check if a campaign with this ID already exists
+      const existingCampaign = localStorage.getItem(`campaign_${value}`);
+      if (existingCampaign) {
+        setNotificationMessage('Warning: A campaign with this ID already exists.');
+        setShowSaveNotification(true);
+        setTimeout(() => setShowSaveNotification(false), 3000);
+      }
+    }
+
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -294,14 +308,34 @@ const FormApp = ({ onNavigate, partner, template, onSave, loadedCampaign }) => {
   };
 
   const handleSave = () => {
+    if (!validateCampaignId(formData.campaignId)) {
+      setNotificationMessage('Invalid Campaign ID. Please use only letters, numbers, hyphens, and underscores.');
+      setShowSaveNotification(true);
+      setTimeout(() => setShowSaveNotification(false), 3000);
+      return;
+    }
+
     const key = `campaign_${formData.campaignId}`;
+    const existingCampaign = localStorage.getItem(key);
+
+    if (existingCampaign) {
+      const overwrite = window.confirm('A campaign with this ID already exists. Do you want to overwrite it?');
+      if (!overwrite) {
+        setNotificationMessage('Save cancelled. Please use a different Campaign ID.');
+        setShowSaveNotification(true);
+        setTimeout(() => setShowSaveNotification(false), 3000);
+        return;
+      }
+      setNotificationMessage('Existing campaign overwritten successfully!');
+    } else {
+      setNotificationMessage('Campaign saved successfully!');
+    }
+
     localStorage.setItem(key, JSON.stringify(formData));
     onSave(formData);
     
     setShowSaveNotification(true);
-    setTimeout(() => {
-      setShowSaveNotification(false);
-    }, 3000);
+    setTimeout(() => setShowSaveNotification(false), 3000);
   };
 
   const escapeHtml = (unsafe) => {
@@ -538,7 +572,7 @@ const FormApp = ({ onNavigate, partner, template, onSave, loadedCampaign }) => {
       </div>
       {showSaveNotification && (
         <div className="fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg save-notification">
-          Campaign saved successfully!
+          {notificationMessage}
         </div>
       )}
     </div>
@@ -631,6 +665,12 @@ const SearchResults = ({ searchQuery, onLoadCampaign, onBack }) => {
       )}
     </div>
   );
+};
+
+const validateCampaignId = (id) => {
+  // Add your validation logic here
+  // For example, ensure it's not empty and follows a specific format
+  return id.trim() !== '' && /^[A-Za-z0-9-_]+$/.test(id);
 };
 
 const App = () => {
