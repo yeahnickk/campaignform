@@ -122,7 +122,6 @@ const HomePage = ({ onSelectForm, onSearch }) => {
             </div>
           </div>
         </div>
----testignore---
         <div className="mt-8">
           <form onSubmit={handleSearch} className="flex items-center">
             <input
@@ -277,7 +276,7 @@ const FormApp = ({ onNavigate, partner, template, onSave, loadedCampaign }) => {
     subjectLine: ''
   });
 
-  const [activeTab, setActiveTab] = useState('cm'); // Add this line
+  const [activeTab, setActiveTab] = useState('cm');
 
   useEffect(() => {
     if (loadedCampaign) {
@@ -290,27 +289,6 @@ const FormApp = ({ onNavigate, partner, template, onSave, loadedCampaign }) => {
       ...prev,
       [field]: value
     }));
-  };
-
-  const handleExport = () => {
-    const csvContent = [
-      ['Field', 'Value'],
-      ['Campaign Manager', formData.campaignId],
-      ['Date', formData.cmDate],
-      ['Partner', formData.cmPartner],
-      ['LMS Contact', formData.lmsName],
-      ['DCS Contact', formData.dcsName],
-      ['Body Copy', formData.bodyCopy]
-    ].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', `campaign_brief_${formData.cmDate || 'export'}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    link.parentNode.removeChild(link);
   };
 
   const handleSave = () => {
@@ -449,14 +427,8 @@ const FormApp = ({ onNavigate, partner, template, onSave, loadedCampaign }) => {
           </h1>
           <div>
             <button
-              onClick={handleExport}
-              className={'px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors mr-2'}
-            >
-              Export
-            </button>
-            <button
               onClick={handleSave}
-              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+              className={'px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors'}
             >
               Save
             </button>
