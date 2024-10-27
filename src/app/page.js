@@ -154,7 +154,7 @@ const PartnerSelection = ({ onSelectPartner, onNavigate }) => {
       <div className="max-w-4xl w-full mx-auto space-y-8">
         <div className="text-center space-y-4">
           <h1 className="text-4xl font-bold text-gray-900">Select Partner</h1>
-          <p className="text-lg text-gray-600">Choose the partner you're building the campaign for</p>
+          <p className="text-lg text-gray-600">Choose the partner you&apos;re building the campaign for</p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-6">
