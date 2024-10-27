@@ -370,15 +370,24 @@ const FormApp = ({ onNavigate, partner, template, onSave, loadedCampaign }) => {
   const handleCampaignIdSubmit = (e) => {
     e.preventDefault();
     if (validateCampaignId(formData.campaignId)) {
-      const initialCampaign = {
-        ...formData,
-        createdAt: new Date().toISOString(),
-        lastUpdated: new Date().toISOString()
-      };
-      localStorage.setItem(`campaign_${formData.campaignId}`, JSON.stringify(initialCampaign));
+      // Check if a campaign with this ID already exists
+      const existingCampaign = localStorage.getItem(`campaign_${formData.campaignId}`);
+      if (existingCampaign) {
+        // If it exists, load the existing data
+        const parsedCampaign = JSON.parse(existingCampaign);
+        setFormData(parsedCampaign);
+        setShowSaveNotification(true);
+        setTimeout(() => setShowSaveNotification(false), 3000);
+      } else {
+        // If it's new, create a new entry
+        const initialCampaign = {
+          ...formData,
+          createdAt: new Date().toISOString(),
+          lastUpdated: new Date().toISOString()
+        };
+        localStorage.setItem(`campaign_${formData.campaignId}`, JSON.stringify(initialCampaign));
+      }
       setActiveView('form');
-      setShowSaveNotification(true);
-      setTimeout(() => setShowSaveNotification(false), 3000);
     } else {
       alert('Please enter a valid Campaign ID');
     }
