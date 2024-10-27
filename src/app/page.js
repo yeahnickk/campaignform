@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable react/no-unescaped-entities */
 import React, { useState, useEffect } from 'react';
 import { ArrowRight, Mail, Clock, FileText, Download, Bold, Italic, List, ChevronRight, Home } from "lucide-react";
 
