@@ -322,6 +322,15 @@ const FormApp = ({ onNavigate, partner, template, onSave, loadedCampaign }) => {
     onSave(formData);
   };
 
+  const escapeHtml = (unsafe) => {
+    return unsafe
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  };
+
   const renderEmailPreview = () => {
     let templateContent = '';
     
@@ -366,7 +375,7 @@ const FormApp = ({ onNavigate, partner, template, onSave, loadedCampaign }) => {
     } else {
       templateContent = `
         <h2>Default Campaign</h2>
-        <p>This is a default campaign preview for ${partner || '[Partner]'}.</p>
+        <p>This is a default campaign preview for ${escapeHtml(partner || '[Partner]')}.</p>
       `;
     }
 
@@ -374,11 +383,11 @@ const FormApp = ({ onNavigate, partner, template, onSave, loadedCampaign }) => {
       <div className="flex-1 bg-white p-6">
         <div className="mb-4">
           <p className="text-sm text-gray-600">From: flybuys@edm.flybuys.com.au</p>
-          <p className="text-sm font-semibold">Subject: {formData.subjectLine || 'Campaign Brief - [Subject]'}</p>
+          <p className="text-sm font-semibold">Subject: {escapeHtml(formData.subjectLine || 'Campaign Brief - [Subject]')}</p>
         </div>
         <div className="space-y-6">
           <div className="text-sm text-gray-600">
-            Dear {formData.cmPartner || '[Partner]'} team,
+            Dear {escapeHtml(formData.cmPartner || '[Partner]')} team,
           </div>
           
           <div className="text-sm text-gray-600">
@@ -388,11 +397,11 @@ const FormApp = ({ onNavigate, partner, template, onSave, loadedCampaign }) => {
           <div className="bg-gray-50 p-4 rounded-lg">
             <h2 className="text-lg font-bold text-gray-800 mb-4">Campaign Details</h2>
             <div className="space-y-2">
-              <p className="text-sm text-gray-600">Campaign ID: {formData.campaignId || '[Campaign ID]'}</p>
-              <p className="text-sm text-gray-600">Partner: {formData.cmPartner || '[Partner]'}</p>
-              <p className="text-sm text-gray-600">Date: {formData.cmDate || '[Date]'}</p>
-              {formData.lmsName && <p className="text-sm text-gray-600">LMS Contact: {formData.lmsName}</p>}
-              {formData.dcsName && <p className="text-sm text-gray-600">DCS Contact: {formData.dcsName}</p>}
+              <p className="text-sm text-gray-600">Campaign ID: {escapeHtml(formData.campaignId || '[Campaign ID]')}</p>
+              <p className="text-sm text-gray-600">Partner: {escapeHtml(formData.cmPartner || '[Partner]')}</p>
+              <p className="text-sm text-gray-600">Date: {escapeHtml(formData.cmDate || '[Date]')}</p>
+              {formData.lmsName && <p className="text-sm text-gray-600">LMS Contact: {escapeHtml(formData.lmsName)}</p>}
+              {formData.dcsName && <p className="text-sm text-gray-600">DCS Contact: {escapeHtml(formData.dcsName)}</p>}
             </div>
           </div>
           
