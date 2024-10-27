@@ -278,6 +278,7 @@ const FormApp = ({ onNavigate, partner, template, onSave, loadedCampaign }) => {
   });
 
   const [activeTab, setActiveTab] = useState('cm');
+  const [showSaveNotification, setShowSaveNotification] = useState(false);
 
   useEffect(() => {
     if (loadedCampaign) {
@@ -293,12 +294,14 @@ const FormApp = ({ onNavigate, partner, template, onSave, loadedCampaign }) => {
   };
 
   const handleSave = () => {
-    // Generate a unique key using the campaignId
     const key = `campaign_${formData.campaignId}`;
-    // Save the formData to localStorage
     localStorage.setItem(key, JSON.stringify(formData));
-    // Call the onSave prop to notify the parent component
     onSave(formData);
+    
+    setShowSaveNotification(true);
+    setTimeout(() => {
+      setShowSaveNotification(false);
+    }, 3000);
   };
 
   const escapeHtml = (unsafe) => {
@@ -533,12 +536,18 @@ const FormApp = ({ onNavigate, partner, template, onSave, loadedCampaign }) => {
           </div>
         </div>
       </div>
+      {showSaveNotification && (
+        <div className="fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg save-notification">
+          Campaign saved successfully!
+        </div>
+      )}
     </div>
   );
 };
 
 const SearchResults = ({ searchQuery, onLoadCampaign, onBack }) => {
   const [results, setResults] = useState([]);
+  const [showDeleteNotification, setShowDeleteNotification] = useState(false);
 
   useEffect(() => {
     // Search for campaigns in localStorage
@@ -550,6 +559,19 @@ const SearchResults = ({ searchQuery, onLoadCampaign, onBack }) => {
       });
     setResults(campaigns);
   }, [searchQuery]);
+
+  const handleDelete = (campaignId) => {
+    if (window.confirm('Are you sure you want to delete this campaign?')) {
+      localStorage.removeItem(`campaign_${campaignId}`);
+      setResults(results.filter(campaign => campaign.id !== campaignId));
+      
+      // Show delete notification
+      setShowDeleteNotification(true);
+      setTimeout(() => {
+        setShowDeleteNotification(false);
+      }, 3000);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col p-8">
@@ -576,18 +598,31 @@ const SearchResults = ({ searchQuery, onLoadCampaign, onBack }) => {
                     <p className="text-gray-600">Subject: {campaign.subjectLine}</p>
                     <p className="text-gray-600">LMS: {campaign.lmsName}, DCS: {campaign.dcsName}</p>
                   </div>
-                  <button
-                    onClick={() => onLoadCampaign(campaign)}
-                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-                  >
-                    Load
-                  </button>
+                  <div className="space-x-2">
+                    <button
+                      onClick={() => onLoadCampaign(campaign)}
+                      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                    >
+                      Load
+                    </button>
+                    <button
+                      onClick={() => handleDelete(campaign.id)}
+                      className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
               </li>
             ))}
           </ul>
         )}
       </div>
+      {showDeleteNotification && (
+        <div className="fixed bottom-4 right-4 bg-red-500 text-white px-4 py-2 rounded shadow-lg save-notification">
+          Campaign deleted successfully!
+        </div>
+      )}
     </div>
   );
 };
