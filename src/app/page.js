@@ -141,6 +141,11 @@ const HomePage = ({ onSelectForm, onSearch }) => {
               </button>
             </form>
           </div>
+          
+          {/* New title added here */}
+          <div className="text-center mt-8">
+            <h2 className="text-3xl font-bold text-red-600">ISHITA LOOK HERE</h2>
+          </div>
         </div>
       </div>
     </Layout>
@@ -193,13 +198,27 @@ const PartnerSelection = ({ onSelectPartner, onNavigate }) => {
 const TemplateSelection = ({ partner, onSelectTemplate, onNavigate }) => {
   const templates = partner === 'Coles' 
     ? [
-        { id: 1, name: 'Standard Marketing Campaign' },
-        { id: 2, name: 'Transactional Campaign' },
-        { id: 3, name: 'Solus Campaign' },
-        { id: 4, name: 'CEDM Campaign' },
-        { id: 5, name: 'API Triggered Communication' }
+        { id: 'COLES_STD_MKT_01', name: 'Standard Marketing Campaign' },
+        { id: 'COLES_TRANS_01', name: 'Transactional Campaign' },
+        { id: 'COLES_SOLUS_01', name: 'Solus Campaign' },
+        { id: 'COLES_CEDM_01', name: 'CEDM Campaign' },
+        { id: 'COLES_API_01', name: 'API Triggered Communication' }
       ]
-    : [1, 2, 3, 4, 5].map(id => ({ id, name: `Template ${id}` }));
+    : partner === 'Kmart'
+    ? [
+        { id: 'KMART_STD_01', name: 'Template 1' },
+        { id: 'KMART_STD_02', name: 'Template 2' },
+        { id: 'KMART_STD_03', name: 'Template 3' },
+        { id: 'KMART_STD_04', name: 'Template 4' },
+        { id: 'KMART_STD_05', name: 'Template 5' }
+      ]
+    : [
+        { id: 'TARGET_STD_01', name: 'Template 1' },
+        { id: 'TARGET_STD_02', name: 'Template 2' },
+        { id: 'TARGET_STD_03', name: 'Template 3' },
+        { id: 'TARGET_STD_04', name: 'Template 4' },
+        { id: 'TARGET_STD_05', name: 'Template 5' }
+      ];
 
   return (
     <Layout currentPage="Select Template" partner={partner} onNavigate={onNavigate}>
@@ -310,32 +329,41 @@ const DataTeamView = ({ formData, handleInputChange }) => {
 };
 
 const IframeEmailPreview = ({ formData, partner, template }) => {
-  const iframeContent = `
-    <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-    <html xmlns="http://www.w3.org/1999/xhtml"
-          xmlns:v="urn:schemas-microsoft-com:vml"
-          xmlns:o="urn:schemas-microsoft-com:office:office"
-          xmlns:w="urn:schemas-microsoft-com:office:word">
-    <head>
-    <title>Flybuys</title>
-    <!-- DEFAULT META TAGS -->
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="format-detection" content="telephone=no" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
-    <link rel="preconnect" href="https://fonts.gstatic.com">
-    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;500;700&display=swap" rel="stylesheet">
-    <style>
-      /* ... (include all the styles from the provided HTML) ... */
-    </style>
-    </head>
-    <body bgcolor="#ffffff" class="u-noPadding">
-      <!-- ... (include all the body content from the provided HTML) ... -->
-    </body>
-    </html>
-  `;
+  const [iframeContent, setIframeContent] = useState('');
+
+  useEffect(() => {
+    console.log('Partner:', partner);
+    console.log('Template:', template);
+    
+    if (template.id === 'COLES_STD_MKT_01') {
+      console.log('Condition met, attempting to fetch template');
+      fetch('/templates/email_preview.html')
+        .then(response => {
+          console.log('Template fetch response:', response);
+          if (!response.ok) {
+            throw new Error('Failed to load email template');
+          }
+          return response.text();
+        })
+        .then(html => {
+          console.log('Loaded HTML template:', html);
+          // Replace any placeholders in your HTML with formData values
+          const processedHtml = html
+            .replace(/\{\{subjectLine\}\}/g, formData.subjectLine || '')
+            .replace(/\{\{previewText\}\}/g, formData.previewText || '')
+            .replace(/\{\{emailContent\}\}/g, formData.emailContent || '');
+          
+          setIframeContent(processedHtml);
+        })
+        .catch(error => {
+          console.error('Error loading template:', error);
+          // Fall back to default template if loading fails
+          setIframeContent(defaultTemplate);
+        });
+    } else {
+      console.log('Condition not met, using default template');
+    }
+  }, [partner, template, formData]);
 
   return (
     <iframe
@@ -484,12 +512,18 @@ const FormApp = ({ onNavigate, partner, template, onSave, loadedCampaign }) => {
         {activeView === 'offers' && (
           <OffersView formData={formData} handleInputChange={handleInputChange} />
         )}
-      </div>
-      {showSaveNotification && (
-        <div className="fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg save-notification">
-          Campaign saved successfully!
+        
+        {/* Add this at the bottom of the component, just before the closing div */}
+        <div className="fixed bottom-2 right-4 text-gray-300 text-xs">
+          Template ID: {template.id}
         </div>
-      )}
+        
+        {showSaveNotification && (
+          <div className="fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg save-notification">
+            Campaign saved successfully!
+          </div>
+        )}
+      </div>
     </Layout>
   );
 };
