@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    .container {
+      max-width: 400px;
+      font-family: Arial, sans-serif;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    
+    .header-image {
+      width: 100%;
+      background: #FFB800;
+      position: relative;
+      aspect-ratio: 16/9;
+    }
+    
+    .content {
+      padding: 20px;
+    }
+    
+    .brand {
+      color: #0066CC;
+      font-size: 18px;
+      margin-bottom: 4px;
+    }
+    
+    .timer {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+    
+    .title {
+      font-size: 16px;
+      margin-bottom: 8px;
+    }
+    
+    .subtitle {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+    
+    .button-container {
+      display: flex;
+      gap: 12px;
+    }
+    
+    .join-button {
+      background: #0066CC;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 4px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    
+    .hide-button {
+      background: white;
+      color: #0066CC;
+      border: 1px solid #0066CC;
+      padding: 12px 24px;
+      border-radius: 4px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <img src="$WOTIMAGEURL$" alt="" class="header-image">
+    <div class="content">
+      <div class="brand">Flybuys</div>
+      <div class="timer">$OFFERENDDATE$</div>
+      <div class="title">Get $OFFERGET$ bonus Flybuys points</div>
+      <div class="subtitle">answer surveys for your chance to win.</div>
+      <div class="button-container">
+        <button class="join-button">Join now</button>
+        <button class="hide-button">Hide Offer</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

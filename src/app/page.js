@@ -1,10 +1,18 @@
 /* eslint-disable react/no-unescaped-entities */
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowRight, Mail, Clock, FileText, Download, Bold, Italic, List, ChevronRight, Home, ArrowUp } from "lucide-react";
+import { ArrowRight, Mail, Clock, FileText, Download, Bold, Italic, List, ChevronRight, Home, ArrowUp, Link, ArrowLeft } from "lucide-react";
+import Papa from 'papaparse';
 
 // Basic HTML Editor Component
 const BasicHtmlEditor = ({ value, onChange }) => {
+  const [showLinkModal, setShowLinkModal] = useState(false);
+  const [linkUrl, setLinkUrl] = useState('');
+  const [linkText, setLinkText] = useState('');
+  const textareaRef = useRef(null);
+  const [selectionStart, setSelectionStart] = useState(0);
+  const [selectionEnd, setSelectionEnd] = useState(0);
+
   const insertTag = (tag) => {
     const textarea = document.getElementById('bodyCopyEditor');
     const start = textarea.selectionStart;
@@ -23,6 +31,30 @@ const BasicHtmlEditor = ({ value, onChange }) => {
     }
     
     onChange(newText);
+  };
+
+  const handleLinkButtonClick = () => {
+    const textarea = document.getElementById('bodyCopyEditor');
+    setSelectionStart(textarea.selectionStart);
+    setSelectionEnd(textarea.selectionEnd);
+    setLinkText(textarea.value.substring(textarea.selectionStart, textarea.selectionEnd));
+    setShowLinkModal(true);
+  };
+
+  const insertLink = () => {
+    const textarea = document.getElementById('bodyCopyEditor');
+    const text = textarea.value;
+    const before = text.substring(0, selectionStart);
+    const after = text.substring(selectionEnd);
+    
+    // Create the HTML link tag
+    const linkHtml = `<a href="${linkUrl}">${linkText || linkUrl}</a>`;
+    const newText = `${before}${linkHtml}${after}`;
+    
+    onChange(newText);
+    setShowLinkModal(false);
+    setLinkUrl('');
+    setLinkText('');
   };
 
   const handleKeyDown = (e) => {
@@ -82,21 +114,158 @@ const BasicHtmlEditor = ({ value, onChange }) => {
         >
           <ArrowUp className="h-4 w-4" />
         </button>
+        <button
+          type="button"
+          onClick={handleLinkButtonClick}
+          className="p-2 border rounded hover:bg-gray-100"
+          title="Hyperlink"
+        >
+          <Link className="h-4 w-4" />
+        </button>
       </div>
       <textarea
         id="bodyCopyEditor"
+        ref={textareaRef}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={handleKeyDown}
         className="w-full min-h-[200px] p-2 border rounded font-mono text-sm"
         placeholder="Enter your content here... Use the buttons above to add HTML formatting. Press Enter for new lines."
       />
+
+      {/* Link Modal */}
+      {showLinkModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
+            <h3 className="text-lg font-semibold mb-4">Insert Link</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  URL
+                </label>
+                <input
+                  type="url"
+                  value={linkUrl}
+                  onChange={(e) => setLinkUrl(e.target.value)}
+                  className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
+                  placeholder="https://example.com"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Text to Display
+                </label>
+                <input
+                  type="text"
+                  value={linkText}
+                  onChange={(e) => setLinkText(e.target.value)}
+                  className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
+                  placeholder="Link text"
+                />
+              </div>
+              <div className="flex justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setShowLinkModal(false)}
+                  className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={insertLink}
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                  disabled={!linkUrl}
+                >
+                  Insert Link
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-const HomePage = ({ onSelectForm, onSearch }) => {
+const HomePage = ({ onSelectForm, onSearch, onLoadCsvBrief }) => {
   const [searchQuery, setSearchQuery] = useState('');
+  const fileInputRef = useRef(null);
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileUpload = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Check if it's a CSV file
+    if (!file.name.endsWith('.csv')) {
+      alert('Please upload a CSV file');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const csvText = e.target?.result;
+        Papa.parse(csvText, {
+          header: true,
+          complete: (results) => {
+            if (results.data && results.data.length > 0) {
+              const briefData = convertCsvToFormData(results.data[0]);
+              onLoadCsvBrief(briefData);
+            } else {
+              alert('No data found in CSV file');
+            }
+          },
+          error: (error) => {
+            console.error('Error parsing CSV:', error);
+            alert('Error parsing CSV file');
+          }
+        });
+      } catch (error) {
+        console.error('Error reading file:', error);
+        alert('Error reading file');
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  // Convert CSV data to form data structure
+  const convertCsvToFormData = (csvRow) => {
+    const formData = {
+      campaignId: csvRow['Campaign ID'],
+      campaignName: csvRow['Campaign Name'],
+      cmPartner: csvRow['Partner'],
+      templateName: csvRow['Template Name'],
+      subjectLine: csvRow['Subject Line'],
+      previewText: csvRow['Preview Text'],
+      header: csvRow['Header'],
+      heroImage: csvRow['Hero Image URL'],
+      emailContent: csvRow['Email Content'],
+      ctaText: csvRow['CTA Text'],
+      shopNowUrl: csvRow['Shop Now URL'],
+      targetAudience: csvRow['Target Audience'],
+      segmentCriteria: csvRow['Segment Criteria'],
+      exclusions: csvRow['Exclusions'],
+      offerCount: parseInt(csvRow['Offer Count']) || 0
+    };
+
+    // Process offers
+    for (let i = 0; i < formData.offerCount; i++) {
+      formData[`offerId${i}`] = csvRow[`Offer ${i + 1} ID`];
+      formData[`offerSpend${i}`] = csvRow[`Offer ${i + 1} Spend`];
+      formData[`offerGet${i}`] = csvRow[`Offer ${i + 1} Get`];
+      formData[`offerTitle${i}`] = csvRow[`Offer ${i + 1} Title`];
+      formData[`offerStartDate${i}`] = csvRow[`Offer ${i + 1} Start Date`];
+      formData[`offerEndDate${i}`] = csvRow[`Offer ${i + 1} End Date`];
+      formData[`wotImageUrl${i}`] = csvRow[`Offer ${i + 1} WOT Image URL`];
+    }
+
+    return formData;
+  };
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -113,6 +282,7 @@ const HomePage = ({ onSelectForm, onSearch }) => {
           </div>
 
           <div className="grid md:grid-cols-3 gap-6">
+            {/* EDM Card */}
             <div 
               className="bg-white p-6 space-y-4 rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer"
               onClick={() => onSelectForm('edm')}
@@ -130,12 +300,13 @@ const HomePage = ({ onSelectForm, onSearch }) => {
               </div>
             </div>
 
+            {/* Modified WOT Card */}
             <div className="bg-white p-6 space-y-4 rounded-lg shadow opacity-75">
               <div className="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center">
                 <Clock className="h-6 w-6 text-green-600" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-gray-900">WOT</h2>
+                <h2 className="text-xl font-semibold text-gray-900">WOT Only</h2>
                 <p className="text-sm text-gray-600 mt-2">Coming soon: Generate WOT documentation</p>
               </div>
               <div className="flex items-center text-green-600">
@@ -144,20 +315,33 @@ const HomePage = ({ onSelectForm, onSearch }) => {
               </div>
             </div>
 
-            <div className="bg-white p-6 space-y-4 rounded-lg shadow opacity-75">
+            {/* Modified Upload Existing Brief card */}
+            <div 
+              className="bg-white p-6 space-y-4 rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={handleUploadClick}
+            >
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                accept=".csv"
+                onChange={handleFileUpload}
+              />
               <div className="h-12 w-12 bg-purple-100 rounded-lg flex items-center justify-center">
                 <FileText className="h-6 w-6 text-purple-600" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-gray-900">Other</h2>
-                <p className="text-sm text-gray-600 mt-2">Coming soon: Additional form types</p>
+                <h2 className="text-xl font-semibold text-gray-900">Upload Existing Brief</h2>
+                <p className="text-sm text-gray-600 mt-2">Upload and edit previously exported campaign briefs</p>
               </div>
               <div className="flex items-center text-purple-600">
-                <span className="text-sm font-medium">Coming soon</span>
+                <span className="text-sm font-medium">Upload CSV</span>
                 <ArrowRight className="h-4 w-4 ml-2" />
               </div>
             </div>
           </div>
+
+          {/* Search section remains the same */}
           <div className="mt-8">
             <form onSubmit={handleSearch} className="flex items-center">
               <input
@@ -361,10 +545,12 @@ const IframeEmailPreview = ({ formData, partner, template }) => {
   const [iframeContent, setIframeContent] = useState('');
   const [iframeHeight, setIframeHeight] = useState('800px');
   const [selectedOfferIndex, setSelectedOfferIndex] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
   const iframeRef = useRef(null);
 
   useEffect(() => {
     const loadTemplate = async () => {
+      setIsLoading(true);
       try {
         let templatePath = '';
         
@@ -395,9 +581,11 @@ const IframeEmailPreview = ({ formData, partner, template }) => {
             .replace('$OFFERENDDATE$', formData?.[`offerEndDate${selectedOfferIndex}`] || '');
           
           setIframeContent(processedHtml);
+          setIsLoading(false);
         }
       } catch (error) {
         console.error('Error loading template:', error);
+        setIsLoading(false);
       }
     };
 
@@ -427,12 +615,18 @@ const IframeEmailPreview = ({ formData, partner, template }) => {
 
   return (
     <div className="space-y-4">
-      {/* Subject Line and Offer Selector Preview */}
+      {/* Subject Line and Preheader Preview */}
       <div className="bg-gray-100 p-4 rounded-lg space-y-4">
         <div>
           <div className="text-sm text-gray-500 mb-1">Subject Line Preview:</div>
           <div className="font-medium">
             {formData?.subjectLine || 'No subject line entered'}
+          </div>
+        </div>
+        <div>
+          <div className="text-sm text-gray-500 mb-1">Preheader Text Preview:</div>
+          <div className="font-medium">
+            {formData?.previewText || 'No preheader text entered'}
           </div>
         </div>
         
@@ -444,15 +638,27 @@ const IframeEmailPreview = ({ formData, partner, template }) => {
               onChange={(e) => setSelectedOfferIndex(Number(e.target.value))}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
             >
-              {offerOptions.map((num) => (
-                <option key={num - 1} value={num - 1}>
-                  Offer {num}
-                </option>
-              ))}
+              {offerOptions.map((num) => {
+                const index = num - 1;
+                const offerId = formData[`offerId${index}`];
+                const displayName = offerId ? `Offer - ${offerId}` : `Offer ${num}`;
+                return (
+                  <option key={index} value={index}>
+                    {displayName}
+                  </option>
+                );
+              })}
             </select>
           </div>
         )}
       </div>
+
+      {/* Only show debug message while loading */}
+      {isLoading && (
+        <div className="text-xs text-gray-500 mb-2">
+          Debug: Attempting to load template
+        </div>
+      )}
 
       {/* Email Preview Iframe */}
       <div className="relative">
@@ -471,249 +677,435 @@ const IframeEmailPreview = ({ formData, partner, template }) => {
 };
 
 const FormApp = ({ onNavigate, partner, template, onSave, loadedCampaign }) => {
-  const [activeView, setActiveView] = useState(loadedCampaign ? 'form' : 'campaignId');
-  const [formData, setFormData] = useState(loadedCampaign || { 
-    cmPartner: partner, 
-    templateId: template.id, 
-    templateName: template.name,
-    offerCount: 0 // Initialize offerCount for all partners
+  const [activeView, setActiveView] = useState(() => {
+    if (loadedCampaign?.campaignId) return 'form';
+    return 'campaignId';
   });
+
+  const [formData, setFormData] = useState(() => {
+    if (loadedCampaign) {
+      return {
+        ...loadedCampaign,
+        cmPartner: loadedCampaign.cmPartner || partner,
+        templateId: loadedCampaign.templateId || template.id,
+        templateName: loadedCampaign.templateName || template.name,
+        offerCount: loadedCampaign.offerCount || 0
+      };
+    }
+    return {
+      cmPartner: partner,
+      templateId: template.id,
+      templateName: template.name,
+      offerCount: 0,
+      campaignId: ''
+    };
+  });
+
   const [showSaveNotification, setShowSaveNotification] = useState(false);
+  const [showExistingCampaignModal, setShowExistingCampaignModal] = useState(false);
+  const [existingCampaign, setExistingCampaign] = useState(null);
 
   const handleInputChange = (field, value) => {
-    setFormData(prevData => ({ ...prevData, [field]: value }));
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
-  const handleSave = () => {
-    const campaignData = {
-      ...formData,
-      lastUpdated: new Date().toISOString()
-    };
-    localStorage.setItem(`campaign_${formData.campaignId}`, JSON.stringify(campaignData));
-    onSave(campaignData);
-    setShowSaveNotification(true);
-    setTimeout(() => setShowSaveNotification(false), 3000);
+  const checkExistingCampaign = (campaignId) => {
+    const savedCampaigns = JSON.parse(localStorage.getItem('campaigns') || '[]');
+    return savedCampaigns.find(c => c.campaignId === campaignId);
   };
 
   const handleCampaignIdSubmit = (e) => {
     e.preventDefault();
-    if (validateCampaignId(formData.campaignId)) {
-      // Check if a campaign with this ID already exists
-      const existingCampaign = localStorage.getItem(`campaign_${formData.campaignId}`);
-      if (existingCampaign) {
-        // If it exists, load the existing data
-        const parsedCampaign = JSON.parse(existingCampaign);
-        setFormData(parsedCampaign);
-        setShowSaveNotification(true);
-        setTimeout(() => setShowSaveNotification(false), 3000);
+    
+    if (formData.campaignId) {
+      const existing = checkExistingCampaign(formData.campaignId);
+      
+      if (existing) {
+        setExistingCampaign(existing);
+        setShowExistingCampaignModal(true);
+      } else if (validateCampaignId(formData.campaignId)) {
+        setActiveView('form');
       } else {
-        // If it's new, create a new entry
-        const initialCampaign = {
-          ...formData,
-          createdAt: new Date().toISOString(),
-          lastUpdated: new Date().toISOString()
-        };
-        localStorage.setItem(`campaign_${formData.campaignId}`, JSON.stringify(initialCampaign));
+        alert('Please enter a valid Campaign ID');
       }
-      setActiveView('form');
-    } else {
-      alert('Please enter a valid Campaign ID');
     }
   };
 
-  if (activeView === 'campaignId') {
-    return (
-      <Layout currentPage="Enter Campaign ID" partner={partner} template={template.name} onNavigate={onNavigate}>
-        <div className="max-w-md mx-auto mt-10">
-          <form onSubmit={handleCampaignIdSubmit} className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
-            <div className="mb-4">
-              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="campaignId">
-                Campaign ID
-              </label>
-              <input
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                id="campaignId"
-                type="text"
-                placeholder="Enter Campaign ID"
-                value={formData.campaignId || ''}
-                onChange={(e) => handleInputChange('campaignId', e.target.value)}
-                required
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <button
-                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-                type="submit"
-              >
-                Continue
-              </button>
-            </div>
-          </form>
-        </div>
-      </Layout>
-    );
-  }
+  const handleExistingCampaignChoice = (choice) => {
+    if (choice === 'load') {
+      // Load the existing campaign
+      setFormData(existingCampaign);
+    }
+    // For 'new', keep the current formData
+    
+    setShowExistingCampaignModal(false);
+    setActiveView('form');
+  };
+
+  const handleSave = () => {
+    try {
+      // Get existing campaigns from localStorage
+      const existingCampaigns = JSON.parse(localStorage.getItem('campaigns') || '[]');
+      
+      // Check if campaign already exists
+      const campaignIndex = existingCampaigns.findIndex(
+        c => c.campaignId === formData.campaignId
+      );
+
+      // Create a clean copy of the form data
+      const campaignToSave = {
+        ...formData,
+        cmPartner: partner,
+        templateId: template.id,
+        templateName: template.name,
+        lastSaved: new Date().toISOString()
+      };
+
+      if (campaignIndex !== -1) {
+        // Update existing campaign
+        existingCampaigns[campaignIndex] = campaignToSave;
+      } else {
+        // Add new campaign
+        existingCampaigns.push(campaignToSave);
+      }
+
+      // Save back to localStorage
+      localStorage.setItem('campaigns', JSON.stringify(existingCampaigns));
+
+      // Show success notification
+      setShowSaveNotification(true);
+      
+      // Hide notification after 3 seconds
+      setTimeout(() => {
+        setShowSaveNotification(false);
+      }, 3000);
+
+      // Call the onSave prop if provided
+      if (onSave) {
+        onSave(campaignToSave);
+      }
+    } catch (error) {
+      console.error('Error saving campaign:', error);
+      alert('Failed to save campaign. Please try again.');
+    }
+  };
 
   return (
     <Layout currentPage="Campaign Brief" partner={partner} template={template.name} onNavigate={onNavigate}>
       <div className="max-w-[1920px] w-full mx-auto space-y-8">
-        {/* Header section */}
-        <div className="bg-white shadow-md rounded-lg p-6 mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Campaign Brief</h1>
-          <div className="flex justify-between items-center">
-            <div>
-              <p className="text-lg text-gray-600">Campaign ID: <span className="font-semibold">{formData.campaignId}</span></p>
-              <p className="text-lg text-gray-600">Template: <span className="font-semibold">{template.name}</span></p>
+        {/* Existing Campaign Modal */}
+        {showExistingCampaignModal && (
+          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">
+                Campaign ID Already Exists
+              </h3>
+              <p className="text-sm text-gray-500 mb-4">
+                A campaign with ID "{formData.campaignId}" already exists. Would you like to load the existing campaign or start a new one with this ID?
+              </p>
+              <div className="flex space-x-4">
+                <button
+                  onClick={() => handleExistingCampaignChoice('load')}
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                >
+                  Load Existing
+                </button>
+                <button
+                  onClick={() => handleExistingCampaignChoice('new')}
+                  className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+                >
+                  Start New
+                </button>
+              </div>
             </div>
-            <button
-              onClick={handleSave}
-              className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
-            >
-              Save Campaign
-            </button>
           </div>
-        </div>
+        )}
 
-        <div className="flex space-x-4 mb-4">
-          <button
-            onClick={() => setActiveView('form')}
-            className={`px-4 py-2 rounded-md ${activeView === 'form' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
-          >
-            Form & Preview
-          </button>
-          <button
-            onClick={() => setActiveView('data')}
-            className={`px-4 py-2 rounded-md ${activeView === 'data' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
-          >
-            Data Team
-          </button>
-          <button
-            onClick={() => setActiveView('offers')}
-            className={`px-4 py-2 rounded-md ${activeView === 'offers' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
-          >
-            Offers
-          </button>
-        </div>
-
-        {activeView === 'form' && (
-          <FormView 
-            formData={formData} 
-            handleInputChange={handleInputChange} 
-          />
-        )}
-        {activeView === 'data' && (
-          <DataTeamView formData={formData} handleInputChange={handleInputChange} />
-        )}
-        {activeView === 'offers' && (
-          <OffersView formData={formData} handleInputChange={handleInputChange} />
-        )}
-        
-        {/* Add this at the bottom of the component, just before the closing div */}
-        <div className="fixed bottom-2 right-4 text-gray-300 text-xs">
-          Template ID: {template.id}
-        </div>
-        
-        {showSaveNotification && (
-          <div className="fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg save-notification">
-            Campaign saved successfully!
+        {/* Show Campaign ID form if in campaignId view and no loaded campaign */}
+        {activeView === 'campaignId' && !loadedCampaign && (
+          <div className="max-w-md mx-auto">
+            <form onSubmit={handleCampaignIdSubmit} className="bg-white p-6 rounded-lg shadow space-y-4">
+              <h2 className="text-xl font-semibold text-gray-900">Enter Campaign ID</h2>
+              <div>
+                <label htmlFor="campaignId" className="block text-sm font-medium text-gray-700">
+                  Campaign ID
+                </label>
+                <input
+                  type="text"
+                  id="campaignId"
+                  value={formData.campaignId || ''}
+                  onChange={(e) => handleInputChange('campaignId', e.target.value)}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                  placeholder="Enter Campaign ID"
+                />
+              </div>
+              <button
+                type="submit"
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                Continue
+              </button>
+            </form>
           </div>
+        )}
+
+        {/* Show header and tabs only after Campaign ID is submitted or when campaign is loaded */}
+        {activeView !== 'campaignId' && (
+          <>
+            {/* Header Section */}
+            <div className="bg-white shadow relative">
+              {/* Success Notification */}
+              {showSaveNotification && (
+                <div className="absolute top-0 left-0 right-0 transform -translate-y-full">
+                  <div className="bg-green-500 text-white px-4 py-2 text-center">
+                    Campaign saved successfully!
+                  </div>
+                </div>
+              )}
+
+              <div className="px-4 sm:px-6 lg:max-w-[1920px] lg:mx-auto lg:px-8">
+                <div className="py-6 md:flex md:items-center md:justify-between">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center">
+                      <div>
+                        <div className="flex items-center">
+                          <h1 className="text-2xl font-bold leading-7 text-gray-900 sm:leading-9 sm:truncate">
+                            {formData.campaignName || 'New Campaign Brief'}
+                          </h1>
+                        </div>
+                        <dl className="mt-2 flex flex-col sm:mt-1 sm:flex-row sm:flex-wrap">
+                          <dt className="sr-only">Campaign ID</dt>
+                          <dd className="flex items-center text-sm text-gray-500 font-medium sm:mr-6">
+                            {formData.campaignId}
+                          </dd>
+                        </dl>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-6 flex space-x-3 md:mt-0 md:ml-4">
+                    <button
+                      type="button"
+                      onClick={handleSave}
+                      className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    >
+                      Save
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const csvData = convertFormDataToCsv(formData);
+                        const blob = new Blob([csvData], { type: 'text/csv' });
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.setAttribute('hidden', '');
+                        a.setAttribute('href', url);
+                        a.setAttribute('download', `campaign-brief-${formData.campaignId || 'draft'}.csv`);
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                      }}
+                      className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Export
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Tabs Section */}
+            <div className="flex space-x-4 mb-4">
+              <button
+                onClick={() => setActiveView('form')}
+                className={`px-4 py-2 rounded-md ${activeView === 'form' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+              >
+                Form & Preview
+              </button>
+              <button
+                onClick={() => setActiveView('data')}
+                className={`px-4 py-2 rounded-md ${activeView === 'data' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+              >
+                Data Team
+              </button>
+              <button
+                onClick={() => setActiveView('offers')}
+                className={`px-4 py-2 rounded-md ${activeView === 'offers' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+              >
+                Offers
+              </button>
+              <button
+                onClick={() => setActiveView('wot')}
+                className={`px-4 py-2 rounded-md ${activeView === 'wot' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+              >
+                Web Offer Tile Preview
+              </button>
+            </div>
+
+            {/* Content Section */}
+            {activeView === 'form' && (
+              <FormView formData={formData} handleInputChange={handleInputChange} template={template} />
+            )}
+            {activeView === 'data' && (
+              <DataTeamView formData={formData} handleInputChange={handleInputChange} />
+            )}
+            {activeView === 'offers' && (
+              <OffersView formData={formData} handleInputChange={handleInputChange} />
+            )}
+            {activeView === 'wot' && (
+              <WebOfferTileView formData={formData} handleInputChange={handleInputChange} />
+            )}
+          </>
         )}
       </div>
     </Layout>
   );
 };
 
+// Helper function for CSV export
+const convertFormDataToCsv = (formData) => {
+  // Convert form data to CSV format
+  const headers = [
+    'Campaign ID',
+    'Campaign Name',
+    'Partner',
+    'Template Name',
+    'Subject Line',
+    'Preview Text',
+    'Header',
+    'Hero Image URL',
+    'Email Content',
+    'CTA Text',
+    'Shop Now URL',
+    'Target Audience',
+    'Segment Criteria',
+    'Exclusions',
+    'Offer Count'
+  ];
+
+  const values = [
+    formData.campaignId || '',
+    formData.campaignName || '',
+    formData.cmPartner || '',
+    formData.templateName || '',
+    formData.subjectLine || '',
+    formData.previewText || '',
+    formData.header || '',
+    formData.heroImage || '',
+    formData.emailContent || '',
+    formData.ctaText || '',
+    formData.shopNowUrl || '',
+    formData.targetAudience || '',
+    formData.segmentCriteria || '',
+    formData.exclusions || '',
+    formData.offerCount || 0
+  ];
+
+  // Add offer-specific fields
+  for (let i = 0; i < formData.offerCount; i++) {
+    headers.push(
+      `Offer ${i + 1} ID`,
+      `Offer ${i + 1} Spend`,
+      `Offer ${i + 1} Get`,
+      `Offer ${i + 1} Title`,
+      `Offer ${i + 1} Start Date`,
+      `Offer ${i + 1} End Date`,
+      `Offer ${i + 1} WOT Image URL`
+    );
+    values.push(
+      formData[`offerId${i}`] || '',
+      formData[`offerSpend${i}`] || '',
+      formData[`offerGet${i}`] || '',
+      formData[`offerTitle${i}`] || '',
+      formData[`offerStartDate${i}`] || '',
+      formData[`offerEndDate${i}`] || '',
+      formData[`wotImageUrl${i}`] || ''
+    );
+  }
+
+  return `${headers.join(',')}\n${values.join(',')}`;
+};
+
 const SearchResults = ({ searchQuery, onLoadCampaign, onBack }) => {
-  const [results, setResults] = useState([]);
-  const [showDeleteNotification, setShowDeleteNotification] = useState(false);
-  const [showDeleteAllNotification, setShowDeleteAllNotification] = useState(false);
+  const [campaigns, setCampaigns] = useState([]);
 
   useEffect(() => {
-    const fetchCampaigns = () => {
-      const campaigns = Object.keys(localStorage)
-        .filter(key => key.startsWith('campaign_') && key.toLowerCase().includes(searchQuery.toLowerCase()))
-        .map(key => {
-          const campaign = JSON.parse(localStorage.getItem(key));
-          return { id: key.replace('campaign_', ''), ...campaign };
-        });
-      setResults(campaigns);
-    };
-
-    fetchCampaigns();
+    const savedCampaigns = JSON.parse(localStorage.getItem('campaigns') || '[]');
+    const filteredCampaigns = savedCampaigns.filter(campaign => 
+      campaign.campaignId?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      campaign.campaignName?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    setCampaigns(filteredCampaigns);
   }, [searchQuery]);
 
   const handleDelete = (campaignId) => {
-    if (window.confirm('Are you sure you want to delete this campaign?')) {
-      localStorage.removeItem(`campaign_${campaignId}`);
-      setResults(prevResults => prevResults.filter(campaign => campaign.id !== campaignId));
-      setShowDeleteNotification(true);
-      setTimeout(() => setShowDeleteNotification(false), 3000);
-    }
-  };
-
-  const handleDeleteAll = () => {
-    if (window.confirm('Are you sure you want to delete ALL campaigns? This action cannot be undone.')) {
-      // Get all keys that start with 'campaign_'
-      const campaignKeys = Object.keys(localStorage)
-        .filter(key => key.startsWith('campaign_'));
-      
-      // Remove all campaigns
-      campaignKeys.forEach(key => localStorage.removeItem(key));
-      
-      // Update results
-      setResults([]);
-      
-      // Show notification
-      setShowDeleteAllNotification(true);
-      setTimeout(() => setShowDeleteAllNotification(false), 3000);
-    }
+    // Get current campaigns
+    const savedCampaigns = JSON.parse(localStorage.getItem('campaigns') || '[]');
+    // Filter out the campaign to delete
+    const updatedCampaigns = savedCampaigns.filter(c => c.campaignId !== campaignId);
+    // Save back to localStorage
+    localStorage.setItem('campaigns', JSON.stringify(updatedCampaigns));
+    // Update state
+    setCampaigns(updatedCampaigns);
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col p-8">
-      <Breadcrumbs currentPage="Search Results" onNavigate={onBack} />
-      <div className="max-w-4xl w-full mx-auto space-y-8">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">Search Results</h1>
-          <div className="space-x-4">
-            <button
-              onClick={handleDeleteAll}
-              className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
-            >
-              Delete All Campaigns
-            </button>
-            <button
-              onClick={onBack}
-              className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
-            >
-              Back to Home
-            </button>
-          </div>
-        </div>
-
-        {results.length === 0 ? (
-          <p>No results found for "{searchQuery}"</p>
-        ) : (
-          <ul className="space-y-4">
-            {results.map(campaign => (
-              <li key={campaign.id} className="bg-white p-4 rounded shadow">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h2 className="text-xl font-semibold">{campaign.campaignId}</h2>
-                    <p className="text-gray-600">{campaign.cmPartner} - {campaign.templateName}</p>
-                    <p className="text-gray-600">Subject: {campaign.subjectLine || 'N/A'}</p>
-                    <p className="text-gray-600">Last Updated: {new Date(campaign.lastUpdated).toLocaleString()}</p>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="flex items-center mb-6">
+        <button
+          onClick={onBack}
+          className="flex items-center text-blue-600 hover:text-blue-800"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Home
+        </button>
+      </div>
+      
+      <h1 className="text-2xl font-bold mb-6">Search Results</h1>
+      
+      {campaigns.length === 0 ? (
+        <p className="text-gray-500">No campaigns found matching "{searchQuery}"</p>
+      ) : (
+        <div className="bg-white shadow overflow-hidden sm:rounded-md">
+          <ul className="divide-y divide-gray-200">
+            {campaigns.map((campaign) => (
+              <li key={campaign.campaignId}>
+                <div className="px-4 py-4 flex items-center justify-between sm:px-6">
+                  <div className="flex items-center">
+                    <div className="min-w-0 flex-1 sm:flex sm:items-center sm:justify-between">
+                      <div>
+                        <div className="flex text-sm">
+                          <p className="font-medium text-blue-600 truncate">
+                            {campaign.campaignName || 'Untitled Campaign'}
+                          </p>
+                          <p className="ml-1 font-normal text-gray-500">
+                            ({campaign.campaignId})
+                          </p>
+                        </div>
+                        <div className="mt-2 flex flex-col space-y-1">
+                          <div className="flex items-center text-sm text-gray-500">
+                            <p>Template: {campaign.templateName}</p>
+                          </div>
+                          <div className="flex items-center text-sm text-gray-500">
+                            <p>Partner: {campaign.cmPartner}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="space-x-2">
+                  <div className="ml-5 flex-shrink-0 flex space-x-2">
                     <button
                       onClick={() => onLoadCampaign(campaign)}
-                      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                      className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                     >
                       Load
                     </button>
                     <button
-                      onClick={() => handleDelete(campaign.id)}
-                      className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                      onClick={() => handleDelete(campaign.campaignId)}
+                      className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                     >
                       Delete
                     </button>
@@ -722,18 +1114,6 @@ const SearchResults = ({ searchQuery, onLoadCampaign, onBack }) => {
               </li>
             ))}
           </ul>
-        )}
-      </div>
-      
-      {showDeleteNotification && (
-        <div className="fixed bottom-4 right-4 bg-red-500 text-white px-4 py-2 rounded shadow-lg save-notification">
-          Campaign deleted successfully!
-        </div>
-      )}
-      
-      {showDeleteAllNotification && (
-        <div className="fixed bottom-4 right-4 bg-red-500 text-white px-4 py-2 rounded shadow-lg save-notification">
-          All campaigns deleted successfully!
         </div>
       )}
     </div>
@@ -767,58 +1147,83 @@ const Layout = ({ children, currentPage, partner, template, onNavigate }) => {
 const OffersView = ({ formData, handleInputChange }) => {
   const offerCount = formData.offerCount || 0;
 
-  const renderOfferFields = (index) => (
-    <div key={index} className="border p-4 rounded-md mb-4">
-      <h3 className="text-lg font-semibold mb-2">Offer {index + 1}</h3>
-      <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Offer Spend</label>
-          <input
-            type="text"
-            value={formData[`offerSpend${index}`] || ''}
-            onChange={(e) => handleInputChange(`offerSpend${index}`, e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Offer Get</label>
-          <input
-            type="text"
-            value={formData[`offerGet${index}`] || ''}
-            onChange={(e) => handleInputChange(`offerGet${index}`, e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Offer Title</label>
-          <input
-            type="text"
-            value={formData[`offerTitle${index}`] || ''}
-            onChange={(e) => handleInputChange(`offerTitle${index}`, e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Offer Start Date</label>
-          <input
-            type="date"
-            value={formData[`offerStartDate${index}`] || ''}
-            onChange={(e) => handleInputChange(`offerStartDate${index}`, e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Offer End Date</label>
-          <input
-            type="date"
-            value={formData[`offerEndDate${index}`] || ''}
-            onChange={(e) => handleInputChange(`offerEndDate${index}`, e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-          />
+  const renderOfferFields = (index) => {
+    const offerId = formData[`offerId${index}`] || '';
+    const displayName = offerId ? `Offer - ${offerId}` : `Offer ${index + 1}`;
+
+    return (
+      <div key={index} className="border p-4 rounded-md mb-4">
+        <h3 className="text-lg font-semibold mb-2">{displayName}</h3>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Offer Spend</label>
+            <input
+              type="text"
+              value={formData[`offerSpend${index}`] || ''}
+              onChange={(e) => handleInputChange(`offerSpend${index}`, e.target.value)}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Offer Get</label>
+            <input
+              type="text"
+              value={formData[`offerGet${index}`] || ''}
+              onChange={(e) => handleInputChange(`offerGet${index}`, e.target.value)}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Offer Title</label>
+            <input
+              type="text"
+              value={formData[`offerTitle${index}`] || ''}
+              onChange={(e) => handleInputChange(`offerTitle${index}`, e.target.value)}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Offer Start Date</label>
+            <input
+              type="date"
+              value={formData[`offerStartDate${index}`] || ''}
+              onChange={(e) => handleInputChange(`offerStartDate${index}`, e.target.value)}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Offer End Date</label>
+            <input
+              type="date"
+              value={formData[`offerEndDate${index}`] || ''}
+              onChange={(e) => handleInputChange(`offerEndDate${index}`, e.target.value)}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Offer ID</label>
+            <input
+              type="text"
+              value={formData[`offerId${index}`] || ''}
+              onChange={(e) => handleInputChange(`offerId${index}`, e.target.value)}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+              placeholder="Enter Offer ID"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">WOT Image URL</label>
+            <input
+              type="text"
+              value={formData[`wotImageUrl${index}`] || ''}
+              onChange={(e) => handleInputChange(`wotImageUrl${index}`, e.target.value)}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+              placeholder="Enter WOT Image URL"
+            />
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="space-y-4">
@@ -874,6 +1279,17 @@ const FormView = ({ formData, handleInputChange }) => {
                 type="text"
                 value={formData.subjectLine || ''}
                 onChange={(e) => handleInputChange('subjectLine', e.target.value)}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+              />
+            </div>
+
+            {/* Preheader Text (renamed from Preview Text) */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Preheader Text</label>
+              <input
+                type="text"
+                value={formData.previewText || ''}
+                onChange={(e) => handleInputChange('previewText', e.target.value)}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
               />
             </div>
@@ -937,27 +1353,12 @@ const FormView = ({ formData, handleInputChange }) => {
                 onChange={(value) => handleInputChange('emailContent', value)}
               />
             </div>
-
-            {/* Preview Text */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Preview Text</label>
-              <input
-                type="text"
-                value={formData.previewText || ''}
-                onChange={(e) => handleInputChange('previewText', e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-              />
-            </div>
           </div>
         </div>
       </div>
       <div className="col-span-8">
         <div className="bg-white p-6 rounded-lg shadow">
           <h2 className="text-xl font-semibold mb-4">Email Preview</h2>
-          {/* Add debug info */}
-          <div className="text-xs text-gray-500 mb-2">
-            Debug: Attempting to load template
-          </div>
           <IframeEmailPreview 
             formData={formData}
             partner={formData.cmPartner}
@@ -966,6 +1367,126 @@ const FormView = ({ formData, handleInputChange }) => {
               name: formData.templateName
             }}
           />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const WebOfferTilePreview = ({ formData, selectedOfferIndex }) => {
+  const [iframeContent, setIframeContent] = useState('');
+  const [iframeHeight, setIframeHeight] = useState('800px');
+  const [isLoading, setIsLoading] = useState(true);
+  const iframeRef = useRef(null);
+
+  useEffect(() => {
+    const loadTemplate = async () => {
+      setIsLoading(true);
+      try {
+        const templatePath = '/templates/WOT.html';
+        const response = await fetch(templatePath);
+        let html = await response.text();
+        
+        // Define all possible offer field patterns
+        const offerFields = [
+          'OFFERGET',
+          'OFFERSPEND',
+          'OFFERTITLE',
+          'OFFERENDDATE',
+          'OFFERSTARTDATE',
+          'OFFERID',
+          'WOTIMAGEURL'
+        ];
+
+        // Replace all matching placeholders with their corresponding values
+        offerFields.forEach(field => {
+          const placeholder = `$${field}$`;
+          const formDataKey = field.toLowerCase();
+          if (html.includes(placeholder)) {
+            html = html.replace(
+              placeholder, 
+              formData?.[`${formDataKey}${selectedOfferIndex}`] || ''
+            );
+          }
+        });
+        
+        setIframeContent(html);
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error loading WOT template:', error);
+        setIsLoading(false);
+      }
+    };
+
+    loadTemplate();
+  }, [formData, selectedOfferIndex]);
+
+  return (
+    <div className="space-y-4">
+      {isLoading && (
+        <div className="text-xs text-gray-500 mb-2">
+          Loading preview...
+        </div>
+      )}
+      <div className="relative">
+        <iframe
+          ref={iframeRef}
+          srcDoc={iframeContent}
+          title="Web Offer Tile Preview"
+          className="w-full border-0"
+          style={{ height: iframeHeight }}
+          sandbox="allow-same-origin allow-scripts"
+          loading="lazy"
+        />
+      </div>
+    </div>
+  );
+};
+
+const WebOfferTileView = ({ formData, handleInputChange }) => {
+  const [selectedOfferIndex, setSelectedOfferIndex] = useState(0);
+
+  return (
+    <div className="grid grid-cols-12 gap-8">
+      <div className="col-span-4 space-y-4">
+        <div className="bg-white p-6 rounded-lg shadow">
+          <div className="space-y-4">
+            {formData.offerCount > 0 ? (
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Select Offer to Preview</label>
+                <select
+                  value={selectedOfferIndex}
+                  onChange={(e) => setSelectedOfferIndex(Number(e.target.value))}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                >
+                  {[...Array(formData.offerCount)].map((_, index) => {
+                    const offerId = formData[`offerId${index}`];
+                    const displayName = offerId ? `Offer - ${offerId}` : `Offer ${index + 1}`;
+                    return (
+                      <option key={index} value={index}>
+                        {displayName}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500">No offers available. Please add offers in the Offers tab.</p>
+            )}
+          </div>
+        </div>
+      </div>
+      <div className="col-span-8">
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h2 className="text-xl font-semibold mb-4">Web Offer Tile Preview</h2>
+          {formData.offerCount > 0 ? (
+            <WebOfferTilePreview 
+              formData={formData} 
+              selectedOfferIndex={selectedOfferIndex}
+            />
+          ) : (
+            <p className="text-gray-500">Please add offers to see the preview.</p>
+          )}
         </div>
       </div>
     </div>
@@ -1027,10 +1548,53 @@ const App = () => {
     console.log('Campaign saved:', campaign);
   };
 
+  const handleLoadCsvBrief = (briefData) => {
+    // Map the template name to the correct template ID and configuration
+    let templateConfig;
+    switch (briefData.templateName) {
+      case 'Standard Marketing Campaign':
+        templateConfig = {
+          id: 'COLES_STD_MKT_01',
+          name: briefData.templateName,
+          previewPath: '/templates/email_preview.html'
+        };
+        break;
+      case 'Transactional Campaign':
+        templateConfig = {
+          id: 'COLES_TRANS_01',
+          name: briefData.templateName,
+          previewPath: '/templates/ColesTrans.html'
+        };
+        break;
+      // Add other template mappings as needed
+      default:
+        templateConfig = {
+          id: 'COLES_STD_MKT_01', // Default to standard if unknown
+          name: briefData.templateName,
+          previewPath: '/templates/email_preview.html'
+        };
+    }
+
+    // Set the loaded campaign data with the correct template configuration
+    setLoadedCampaign({
+      ...briefData,
+      templateId: templateConfig.id,
+      previewPath: templateConfig.previewPath
+    });
+    
+    setSelectedPartner(briefData.cmPartner);
+    setSelectedTemplate(templateConfig);
+    setCurrentPage('form');
+  };
+
   return (
     <>
       {currentPage === 'home' && (
-        <HomePage onSelectForm={handleSelectForm} onSearch={handleSearch} />
+        <HomePage 
+          onSelectForm={handleSelectForm} 
+          onSearch={handleSearch}
+          onLoadCsvBrief={handleLoadCsvBrief}
+        />
       )}
       {currentPage === 'search' && (
         <SearchResults
@@ -1055,7 +1619,7 @@ const App = () => {
           partner={selectedPartner} 
           template={selectedTemplate}
           onSave={handleSaveCampaign}
-          loadedCampaign={loadedCampaign}
+          loadedCampaign={loadedCampaign}  // This now contains the CSV data
         />
       )}
     </>
