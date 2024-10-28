@@ -335,26 +335,12 @@ const IframeEmailPreview = ({ formData, partner, template }) => {
           const response = await fetch('/templates/email_preview.html');
           const html = await response.text();
           
-          // Replace the placeholder with actual email content
-          const processedHtml = html.replace(
-            '$EMAIL_CONTENT$',
-            formData?.emailContent || ''
-          );
+          // Replace both placeholders
+          const processedHtml = html
+            .replace('$HEADER$', formData?.header || '')
+            .replace('$EMAIL_CONTENT$', formData?.emailContent || '');
           
           setIframeContent(processedHtml);
-          
-          setTimeout(() => {
-            if (iframeRef.current) {
-              const iframe = iframeRef.current;
-              try {
-                const height = iframe.contentWindow.document.documentElement.scrollHeight;
-                setIframeHeight(`${height}px`);
-              } catch (error) {
-                console.log('Setting default height due to security restriction');
-                setIframeHeight('800px');
-              }
-            }
-          }, 100);
         } catch (error) {
           console.error('Error loading template:', error);
         }
@@ -362,7 +348,24 @@ const IframeEmailPreview = ({ formData, partner, template }) => {
     };
 
     loadTemplate();
-  }, [template?.id, formData?.emailContent]); // Simplified dependency array
+
+    // Separate useEffect for height adjustment
+    const adjustHeight = () => {
+      if (iframeRef.current) {
+        const iframe = iframeRef.current;
+        try {
+          const height = iframe.contentWindow.document.documentElement.scrollHeight;
+          setIframeHeight(`${height}px`);
+        } catch (error) {
+          console.log('Setting default height due to security restriction');
+          setIframeHeight('800px');
+        }
+      }
+    };
+
+    const timer = setTimeout(adjustHeight, 100);
+    return () => clearTimeout(timer);
+  }, [template?.id, formData?.emailContent, formData?.header]);
 
   return (
     <div className="space-y-4">
@@ -725,382 +728,20 @@ const OffersView = ({ formData, handleInputChange }) => {
 };
 
 const FormView = ({ formData, handleInputChange }) => {
-  // Add this debug log
-  console.log('FormView Rendering with template:', formData?.templateId);
-
-  const renderEmailPreview = () => {
-    const emailHTML = `
-      <!doctype html>
-      <html lang="en">
-        <head>
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-          <title>${formData.subjectLine || 'Email Preview'}</title>
-          <style media="all" type="text/css">
-            /* -------------------------------------
-            GLOBAL RESETS
-            ------------------------------------- */
-            
-            body {
-              font-family: Helvetica, sans-serif;
-              -webkit-font-smoothing: antialiased;
-              font-size: 16px;
-              line-height: 1.3;
-              -ms-text-size-adjust: 100%;
-              -webkit-text-size-adjust: 100%;
-            }
-            
-            table {
-              border-collapse: separate;
-              mso-table-lspace: 0pt;
-              mso-table-rspace: 0pt;
-              width: 100%;
-            }
-            
-            table td {
-              font-family: Helvetica, sans-serif;
-              font-size: 16px;
-              vertical-align: top;
-            }
-            /* -------------------------------------
-            BODY & CONTAINER
-            ------------------------------------- */
-            
-            body {
-              background-color: #f4f5f6;
-              margin: 0;
-              padding: 0;
-            }
-            
-            .body {
-              background-color: #f4f5f6;
-              width: 100%;
-            }
-            
-            .container {
-              margin: 0 auto !important;
-              max-width: 600px;
-              padding: 0;
-              padding-top: 24px;
-              width: 600px;
-            }
-            
-            .content {
-              box-sizing: border-box;
-              display: block;
-              margin: 0 auto;
-              max-width: 600px;
-              padding: 0;
-            }
-            /* -------------------------------------
-            HEADER, FOOTER, MAIN
-            ------------------------------------- */
-            
-            .main {
-              background: #ffffff;
-              border: 1px solid #eaebed;
-              border-radius: 16px;
-              width: 100%;
-            }
-            
-            .wrapper {
-              box-sizing: border-box;
-              padding: 24px;
-            }
-            
-            .footer {
-              clear: both;
-              padding-top: 24px;
-              text-align: center;
-              width: 100%;
-            }
-            
-            .footer td,
-            .footer p,
-            .footer span,
-            .footer a {
-              color: #9a9ea6;
-              font-size: 16px;
-              text-align: center;
-            }
-            /* -------------------------------------
-            TYPOGRAPHY
-            ------------------------------------- */
-            
-            p {
-              font-family: Helvetica, sans-serif;
-              font-size: 16px;
-              font-weight: normal;
-              margin: 0;
-              margin-bottom: 16px;
-            }
-            
-            a {
-              color: #0867ec;
-              text-decoration: underline;
-            }
-            /* -------------------------------------
-            BUTTONS
-            ------------------------------------- */
-            
-            .btn {
-              box-sizing: border-box;
-              min-width: 100% !important;
-              width: 100%;
-            }
-            
-            .btn > tbody > tr > td {
-              padding-bottom: 16px;
-            }
-            
-            .btn table {
-              width: auto;
-            }
-            
-            .btn table td {
-              background-color: #ffffff;
-              border-radius: 4px;
-              text-align: center;
-            }
-            
-            .btn a {
-              background-color: #ffffff;
-              border: solid 2px #0867ec;
-              border-radius: 4px;
-              box-sizing: border-box;
-              color: #0867ec;
-              cursor: pointer;
-              display: inline-block;
-              font-size: 16px;
-              font-weight: bold;
-              margin: 0;
-              padding: 12px 24px;
-              text-decoration: none;
-              text-transform: capitalize;
-            }
-            
-            .btn-primary table td {
-              background-color: #0867ec;
-            }
-            
-            .btn-primary a {
-              background-color: #0867ec;
-              border-color: #0867ec;
-              color: #ffffff;
-            }
-            
-            @media all {
-              .btn-primary table td:hover {
-                background-color: #ec0867 !important;
-              }
-              .btn-primary a:hover {
-                background-color: #ec0867 !important;
-                border-color: #ec0867 !important;
-              }
-            }
-            
-            /* -------------------------------------
-            OTHER STYLES THAT MIGHT BE USEFUL
-            ------------------------------------- */
-            
-            .last {
-              margin-bottom: 0;
-            }
-            
-            .first {
-              margin-top: 0;
-            }
-            
-            .align-center {
-              text-align: center;
-            }
-            
-            .align-right {
-              text-align: right;
-            }
-            
-            .align-left {
-              text-align: left;
-            }
-            
-            .text-link {
-              color: #0867ec !important;
-              text-decoration: underline !important;
-            }
-            
-            .clear {
-              clear: both;
-            }
-            
-            .mt0 {
-              margin-top: 0;
-            }
-            
-            .mb0 {
-              margin-bottom: 0;
-            }
-            
-            .preheader {
-              color: transparent;
-              display: none;
-              height: 0;
-              max-height: 0;
-              max-width: 0;
-              opacity: 0;
-              overflow: hidden;
-              mso-hide: all;
-              visibility: hidden;
-              width: 0;
-            }
-            
-            .powered-by a {
-              text-decoration: none;
-            }
-            
-            /* -------------------------------------
-            RESPONSIVE AND MOBILE FRIENDLY STYLES
-            ------------------------------------- */
-            
-            @media only screen and (max-width: 640px) {
-              .main p,
-              .main td,
-              .main span {
-                font-size: 16px !important;
-              }
-              .wrapper {
-                padding: 8px !important;
-              }
-              .content {
-                padding: 0 !important;
-              }
-              .container {
-                padding: 0 !important;
-                padding-top: 8px !important;
-                width: 100% !important;
-              }
-              .main {
-                border-left-width: 0 !important;
-                border-radius: 0 !important;
-                border-right-width: 0 !important;
-              }
-              .btn table {
-                max-width: 100% !important;
-                width: 100% !important;
-              }
-              .btn a {
-                font-size: 16px !important;
-                max-width: 100% !important;
-                width: 100% !important;
-              }
-            }
-            /* -------------------------------------
-            PRESERVE THESE STYLES IN THE HEAD
-            ------------------------------------- */
-            
-            @media all {
-              .ExternalClass {
-                width: 100%;
-              }
-              .ExternalClass,
-              .ExternalClass p,
-              .ExternalClass span,
-              .ExternalClass font,
-              .ExternalClass td,
-              .ExternalClass div {
-                line-height: 100%;
-              }
-              .apple-link a {
-                color: inherit !important;
-                font-family: inherit !important;
-                font-size: inherit !important;
-                font-weight: inherit !important;
-                line-height: inherit !important;
-                text-decoration: none !important;
-              }
-              #MessageViewBody a {
-                color: inherit;
-                text-decoration: none;
-                font-size: inherit;
-                font-family: inherit;
-                font-weight: inherit;
-                line-height: inherit;
-              }
-            }
-          </style>
-        </head>
-        <body>
-          <table role="presentation" border="0" cellpadding="0" cellspacing="0" class="body">
-            <tr>
-              <td>&nbsp;</td>
-              <td class="container">
-                <div class="content">
-                  <div style="background-color: #f3f3f3; padding: 10px; margin-bottom: 20px; border-radius: 5px;">
-                    <strong>Subject:</strong> ${formData.subjectLine || 'No subject'}
-                  </div>
-                  <span class="preheader">${formData.previewText || 'This is preheader text. Some clients will show this text as a preview.'}</span>
-                  <table role="presentation" border="0" cellpadding="0" cellspacing="0" class="main">
-                    <tr>
-                      <td class="wrapper">
-                        ${formData.emailContent || `
-                          <p>Hi there</p>
-                          <p>Sometimes you just want to send a simple HTML email with a simple design and clear call to action. This is it.</p>
-                          <table role="presentation" border="0" cellpadding="0" cellspacing="0" class="btn btn-primary">
-                            <tbody>
-                              <tr>
-                                <td align="left">
-                                  <table role="presentation" border="0" cellpadding="0" cellspacing="0">
-                                    <tbody>
-                                      <tr>
-                                        <td> <a href="http://htmlemail.io" target="_blank">Call To Action</a> </td>
-                                      </tr>
-                                    </tbody>
-                                  </table>
-                                </td>
-                              </tr>
-                            </tbody>
-                          </table>
-                          <p>This is a really simple email template. Its sole purpose is to get the recipient to click the button with no distractions.</p>
-                          <p>Good luck! Hope it works.</p>
-                        `}
-                      </td>
-                    </tr>
-                  </table>
-                  <div class="footer">
-                    <table role="presentation" border="0" cellpadding="0" cellspacing="0">
-                      <tr>
-                        <td class="content-block">
-                          <span class="apple-link">${formData.companyAddress || 'Company Inc, 7-11 Commercial Ct, Belfast BT1 2NB'}</span>
-                          <br> Don't like these emails? <a href="http://htmlemail.io/blog">Unsubscribe</a>.
-                        </td>
-                      </tr>
-                      <tr>
-                        <td class="content-block powered-by">
-                          Powered by <a href="http://htmlemail.io">HTMLemail.io</a>
-                        </td>
-                      </tr>
-                    </table>
-                  </div>
-                </div>
-              </td>
-              <td>&nbsp;</td>
-            </tr>
-          </table>
-        </body>
-      </html>
-    `;
-
-    return (
-      <iframe
-        srcDoc={emailHTML}
-        style={{ width: '100%', height: '600px', border: 'none' }}
-        title="Email Preview"
-      />
-    );
-  };
-
   return (
     <div className="grid grid-cols-12 gap-8">
       <div className="col-span-4 space-y-4">
+        {/* Add the new Header field right at the top */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Header</label>
+          <input
+            type="text"
+            value={formData.header || ''}
+            onChange={(e) => handleInputChange('header', e.target.value)}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+          />
+        </div>
+
         <div className="bg-white p-6 rounded-lg shadow">
           <div className="space-y-4">
             <div>
