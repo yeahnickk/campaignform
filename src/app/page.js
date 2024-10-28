@@ -1,6 +1,6 @@
 /* eslint-disable react/no-unescaped-entities */
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ArrowRight, Mail, Clock, FileText, Download, Bold, Italic, List, ChevronRight, Home } from "lucide-react";
 
 // Basic HTML Editor Component
@@ -140,11 +140,6 @@ const HomePage = ({ onSelectForm, onSearch }) => {
                 Search
               </button>
             </form>
-          </div>
-          
-          {/* New title added here */}
-          <div className="text-center mt-8">
-            <h2 className="text-3xl font-bold text-red-600">ISHITA LOOK HERE</h2>
           </div>
         </div>
       </div>
@@ -330,48 +325,68 @@ const DataTeamView = ({ formData, handleInputChange }) => {
 
 const IframeEmailPreview = ({ formData, partner, template }) => {
   const [iframeContent, setIframeContent] = useState('');
+  const [iframeHeight, setIframeHeight] = useState('800px');
+  const iframeRef = useRef(null);
 
   useEffect(() => {
-    console.log('Partner:', partner);
-    console.log('Template:', template);
-    
-    if (template.id === 'COLES_STD_MKT_01') {
-      console.log('Condition met, attempting to fetch template');
-      fetch('/templates/email_preview.html')
-        .then(response => {
-          console.log('Template fetch response:', response);
-          if (!response.ok) {
-            throw new Error('Failed to load email template');
-          }
-          return response.text();
-        })
-        .then(html => {
-          console.log('Loaded HTML template:', html);
-          // Replace any placeholders in your HTML with formData values
-          const processedHtml = html
-            .replace(/\{\{subjectLine\}\}/g, formData.subjectLine || '')
-            .replace(/\{\{previewText\}\}/g, formData.previewText || '')
-            .replace(/\{\{emailContent\}\}/g, formData.emailContent || '');
+    const loadTemplate = async () => {
+      if (template?.id === 'COLES_STD_MKT_01') {
+        try {
+          const response = await fetch('/templates/email_preview.html');
+          const html = await response.text();
+          
+          // Replace the placeholder with actual email content
+          const processedHtml = html.replace(
+            '$EMAIL_CONTENT$',
+            formData?.emailContent || ''
+          );
           
           setIframeContent(processedHtml);
-        })
-        .catch(error => {
+          
+          setTimeout(() => {
+            if (iframeRef.current) {
+              const iframe = iframeRef.current;
+              try {
+                const height = iframe.contentWindow.document.documentElement.scrollHeight;
+                setIframeHeight(`${height}px`);
+              } catch (error) {
+                console.log('Setting default height due to security restriction');
+                setIframeHeight('800px');
+              }
+            }
+          }, 100);
+        } catch (error) {
           console.error('Error loading template:', error);
-          // Fall back to default template if loading fails
-          setIframeContent(defaultTemplate);
-        });
-    } else {
-      console.log('Condition not met, using default template');
-    }
-  }, [partner, template, formData]);
+        }
+      }
+    };
+
+    loadTemplate();
+  }, [template?.id, formData?.emailContent]); // Simplified dependency array
 
   return (
-    <iframe
-      srcDoc={iframeContent}
-      title="Email Preview"
-      className="w-full h-full border-0"
-      sandbox="allow-scripts"
-    />
+    <div className="space-y-4">
+      {/* Subject Line Preview */}
+      <div className="bg-gray-100 p-4 rounded-lg">
+        <div className="text-sm text-gray-500 mb-1">Subject Line Preview:</div>
+        <div className="font-medium">
+          {formData?.subjectLine || 'No subject line entered'}
+        </div>
+      </div>
+
+      {/* Email Preview Iframe */}
+      <div className="relative">
+        <iframe
+          ref={iframeRef}
+          srcDoc={iframeContent}
+          title="Email Preview"
+          className="w-full border-0"
+          style={{ height: iframeHeight }}
+          sandbox="allow-same-origin allow-scripts"
+          loading="lazy"
+        />
+      </div>
+    </div>
   );
 };
 
@@ -710,6 +725,9 @@ const OffersView = ({ formData, handleInputChange }) => {
 };
 
 const FormView = ({ formData, handleInputChange }) => {
+  // Add this debug log
+  console.log('FormView Rendering with template:', formData?.templateId);
+
   const renderEmailPreview = () => {
     const emailHTML = `
       <!doctype html>
@@ -1138,7 +1156,18 @@ const FormView = ({ formData, handleInputChange }) => {
       <div className="col-span-8">
         <div className="bg-white p-6 rounded-lg shadow">
           <h2 className="text-xl font-semibold mb-4">Email Preview</h2>
-          {renderEmailPreview()}
+          {/* Add debug info */}
+          <div className="text-xs text-gray-500 mb-2">
+            Debug: Attempting to load template
+          </div>
+          <IframeEmailPreview 
+            formData={formData}
+            partner={formData.cmPartner}
+            template={{
+              id: formData.templateId,
+              name: formData.templateName
+            }}
+          />
         </div>
       </div>
     </div>
