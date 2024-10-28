@@ -1,7 +1,7 @@
 /* eslint-disable react/no-unescaped-entities */
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowRight, Mail, Clock, FileText, Download, Bold, Italic, List, ChevronRight, Home } from "lucide-react";
+import { ArrowRight, Mail, Clock, FileText, Download, Bold, Italic, List, ChevronRight, Home, ArrowUp } from "lucide-react";
 
 // Basic HTML Editor Component
 const BasicHtmlEditor = ({ value, onChange }) => {
@@ -25,6 +25,28 @@ const BasicHtmlEditor = ({ value, onChange }) => {
     onChange(newText);
   };
 
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const textarea = e.target;
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const text = textarea.value;
+      const before = text.substring(0, start);
+      const after = text.substring(end);
+      
+      // Insert <br /> tag at cursor position
+      const newText = `${before}<br />\n${after}`;
+      onChange(newText);
+      
+      // Move cursor after the <br /> tag
+      setTimeout(() => {
+        textarea.selectionStart = start + 7; // length of "<br />\n"
+        textarea.selectionEnd = start + 7;
+      }, 0);
+    }
+  };
+
   return (
     <div className="space-y-2">
       <div className="flex gap-2">
@@ -32,6 +54,7 @@ const BasicHtmlEditor = ({ value, onChange }) => {
           type="button"
           onClick={() => insertTag('strong')}
           className="p-2 border rounded hover:bg-gray-100"
+          title="Bold"
         >
           <Bold className="h-4 w-4" />
         </button>
@@ -39,6 +62,7 @@ const BasicHtmlEditor = ({ value, onChange }) => {
           type="button"
           onClick={() => insertTag('em')}
           className="p-2 border rounded hover:bg-gray-100"
+          title="Italic"
         >
           <Italic className="h-4 w-4" />
         </button>
@@ -46,16 +70,26 @@ const BasicHtmlEditor = ({ value, onChange }) => {
           type="button"
           onClick={() => insertTag('ul')}
           className="p-2 border rounded hover:bg-gray-100"
+          title="Bullet List"
         >
           <List className="h-4 w-4" />
+        </button>
+        <button
+          type="button"
+          onClick={() => insertTag('sup')}
+          className="p-2 border rounded hover:bg-gray-100"
+          title="Superscript"
+        >
+          <ArrowUp className="h-4 w-4" />
         </button>
       </div>
       <textarea
         id="bodyCopyEditor"
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        onKeyDown={handleKeyDown}
         className="w-full min-h-[200px] p-2 border rounded font-mono text-sm"
-        placeholder="Enter your content here... Use the buttons above to add HTML formatting."
+        placeholder="Enter your content here... Use the buttons above to add HTML formatting. Press Enter for new lines."
       />
     </div>
   );
@@ -336,12 +370,14 @@ const IframeEmailPreview = ({ formData, partner, template }) => {
           const response = await fetch('/templates/email_preview.html');
           const html = await response.text();
           
-          // Replace both header and email content placeholders
+          // Replace all placeholders
           let processedHtml = html
             .replace('$HEADER$', formData?.header || '')
-            .replace('$EMAIL_CONTENT$', formData?.emailContent || '');
+            .replace('$HERO_IMAGE$', formData?.heroImage || '')
+            .replace('$EMAIL_CONTENT$', formData?.emailContent || '')
+            .replace('$MAINCTATEXT$', formData?.ctaText || '');
 
-          // Replace offer placeholders with selected offer data
+          // Replace offer placeholders
           processedHtml = processedHtml
             .replace('$OFFERSPEND$', formData?.[`offerSpend${selectedOfferIndex}`] || '')
             .replace('$OFFERGET$', formData?.[`offerGet${selectedOfferIndex}`] || '')
@@ -833,6 +869,18 @@ const FormView = ({ formData, handleInputChange }) => {
               />
             </div>
 
+            {/* Hero Image URL - New Field */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Hero Image URL</label>
+              <input
+                type="text"
+                value={formData.heroImage || ''}
+                onChange={(e) => handleInputChange('heroImage', e.target.value)}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                placeholder="Enter the URL for the hero image"
+              />
+            </div>
+
             {/* Header */}
             <div>
               <label className="block text-sm font-medium text-gray-700">Header</label>
@@ -844,14 +892,40 @@ const FormView = ({ formData, handleInputChange }) => {
               />
             </div>
 
+            {/* CTA Text - New Dropdown */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">CTA Text</label>
+              <select
+                value={formData.ctaText || ''}
+                onChange={(e) => handleInputChange('ctaText', e.target.value)}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+              >
+                <option value="">Select CTA Text</option>
+                <option value="Shop now">Shop now</option>
+                <option value="Activate">Activate</option>
+              </select>
+            </div>
+
+            {/* Conditional Shop Now URL field */}
+            {formData.ctaText === 'Shop now' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Shop Now URL</label>
+                <input
+                  type="text"
+                  value={formData.shopNowUrl || ''}
+                  onChange={(e) => handleInputChange('shopNowUrl', e.target.value)}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                  placeholder="Enter the URL for the Shop Now button"
+                />
+              </div>
+            )}
+
             {/* Email Content */}
             <div>
               <label className="block text-sm font-medium text-gray-700">Email Content</label>
-              <textarea
+              <BasicHtmlEditor
                 value={formData.emailContent || ''}
-                onChange={(e) => handleInputChange('emailContent', e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                rows="10"
+                onChange={(value) => handleInputChange('emailContent', value)}
               />
             </div>
 
