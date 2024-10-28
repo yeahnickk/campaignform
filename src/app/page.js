@@ -1031,6 +1031,7 @@ const convertFormDataToCsv = (formData) => {
 
 const SearchResults = ({ searchQuery, onLoadCampaign, onBack }) => {
   const [campaigns, setCampaigns] = useState([]);
+  const [showDeleteAllModal, setShowDeleteAllModal] = useState(false);
 
   useEffect(() => {
     const savedCampaigns = JSON.parse(localStorage.getItem('campaigns') || '[]');
@@ -1041,20 +1042,23 @@ const SearchResults = ({ searchQuery, onLoadCampaign, onBack }) => {
     setCampaigns(filteredCampaigns);
   }, [searchQuery]);
 
-  const handleDelete = (campaignId) => {
-    // Get current campaigns
-    const savedCampaigns = JSON.parse(localStorage.getItem('campaigns') || '[]');
-    // Filter out the campaign to delete
-    const updatedCampaigns = savedCampaigns.filter(c => c.campaignId !== campaignId);
-    // Save back to localStorage
-    localStorage.setItem('campaigns', JSON.stringify(updatedCampaigns));
+  const handleDeleteAll = () => {
+    // Show confirmation modal
+    setShowDeleteAllModal(true);
+  };
+
+  const confirmDeleteAll = () => {
+    // Clear all campaigns from localStorage
+    localStorage.removeItem('campaigns');
     // Update state
-    setCampaigns(updatedCampaigns);
+    setCampaigns([]);
+    // Close modal
+    setShowDeleteAllModal(false);
   };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex items-center mb-6">
+      <div className="flex items-center justify-between mb-6">
         <button
           onClick={onBack}
           className="flex items-center text-blue-600 hover:text-blue-800"
@@ -1062,10 +1066,47 @@ const SearchResults = ({ searchQuery, onLoadCampaign, onBack }) => {
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Home
         </button>
+        
+        {campaigns.length > 0 && (
+          <button
+            onClick={handleDeleteAll}
+            className="flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+          >
+            Delete All Campaigns
+          </button>
+        )}
       </div>
       
       <h1 className="text-2xl font-bold mb-6">Search Results</h1>
       
+      {/* Delete All Confirmation Modal */}
+      {showDeleteAllModal && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">
+              Delete All Campaigns
+            </h3>
+            <p className="text-sm text-gray-500 mb-4">
+              Are you sure you want to delete all saved campaigns? This action cannot be undone.
+            </p>
+            <div className="flex space-x-4">
+              <button
+                onClick={confirmDeleteAll}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+              >
+                Yes, Delete All
+              </button>
+              <button
+                onClick={() => setShowDeleteAllModal(false)}
+                className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {campaigns.length === 0 ? (
         <p className="text-gray-500">No campaigns found matching "{searchQuery}"</p>
       ) : (
