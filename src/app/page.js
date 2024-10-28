@@ -326,6 +326,7 @@ const DataTeamView = ({ formData, handleInputChange }) => {
 const IframeEmailPreview = ({ formData, partner, template }) => {
   const [iframeContent, setIframeContent] = useState('');
   const [iframeHeight, setIframeHeight] = useState('800px');
+  const [selectedOfferIndex, setSelectedOfferIndex] = useState(0);
   const iframeRef = useRef(null);
 
   useEffect(() => {
@@ -335,10 +336,18 @@ const IframeEmailPreview = ({ formData, partner, template }) => {
           const response = await fetch('/templates/email_preview.html');
           const html = await response.text();
           
-          // Replace both placeholders
-          const processedHtml = html
+          // Replace both header and email content placeholders
+          let processedHtml = html
             .replace('$HEADER$', formData?.header || '')
             .replace('$EMAIL_CONTENT$', formData?.emailContent || '');
+
+          // Replace offer placeholders with selected offer data
+          processedHtml = processedHtml
+            .replace('$OFFERSPEND$', formData?.[`offerSpend${selectedOfferIndex}`] || '')
+            .replace('$OFFERGET$', formData?.[`offerGet${selectedOfferIndex}`] || '')
+            .replace('$OFFERTITLE$', formData?.[`offerTitle${selectedOfferIndex}`] || '')
+            .replace('$OFFERSTARTDATE$', formData?.[`offerStartDate${selectedOfferIndex}`] || '')
+            .replace('$OFFERENDDATE$', formData?.[`offerEndDate${selectedOfferIndex}`] || '');
           
           setIframeContent(processedHtml);
         } catch (error) {
@@ -365,16 +374,39 @@ const IframeEmailPreview = ({ formData, partner, template }) => {
 
     const timer = setTimeout(adjustHeight, 100);
     return () => clearTimeout(timer);
-  }, [template?.id, formData?.emailContent, formData?.header]);
+  }, [template?.id, formData, selectedOfferIndex]);
+
+  // Generate offer selector options based on offerCount
+  const offerCount = formData?.offerCount || 0;
+  const offerOptions = Array.from({ length: offerCount }, (_, index) => index + 1);
 
   return (
     <div className="space-y-4">
-      {/* Subject Line Preview */}
-      <div className="bg-gray-100 p-4 rounded-lg">
-        <div className="text-sm text-gray-500 mb-1">Subject Line Preview:</div>
-        <div className="font-medium">
-          {formData?.subjectLine || 'No subject line entered'}
+      {/* Subject Line and Offer Selector Preview */}
+      <div className="bg-gray-100 p-4 rounded-lg space-y-4">
+        <div>
+          <div className="text-sm text-gray-500 mb-1">Subject Line Preview:</div>
+          <div className="font-medium">
+            {formData?.subjectLine || 'No subject line entered'}
+          </div>
         </div>
+        
+        {offerCount > 0 && (
+          <div>
+            <div className="text-sm text-gray-500 mb-1">Select Offer to Preview:</div>
+            <select
+              value={selectedOfferIndex}
+              onChange={(e) => setSelectedOfferIndex(Number(e.target.value))}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+            >
+              {offerOptions.map((num) => (
+                <option key={num - 1} value={num - 1}>
+                  Offer {num}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       {/* Email Preview Iframe */}
@@ -549,6 +581,7 @@ const FormApp = ({ onNavigate, partner, template, onSave, loadedCampaign }) => {
 const SearchResults = ({ searchQuery, onLoadCampaign, onBack }) => {
   const [results, setResults] = useState([]);
   const [showDeleteNotification, setShowDeleteNotification] = useState(false);
+  const [showDeleteAllNotification, setShowDeleteAllNotification] = useState(false);
 
   useEffect(() => {
     const fetchCampaigns = () => {
@@ -573,19 +606,46 @@ const SearchResults = ({ searchQuery, onLoadCampaign, onBack }) => {
     }
   };
 
+  const handleDeleteAll = () => {
+    if (window.confirm('Are you sure you want to delete ALL campaigns? This action cannot be undone.')) {
+      // Get all keys that start with 'campaign_'
+      const campaignKeys = Object.keys(localStorage)
+        .filter(key => key.startsWith('campaign_'));
+      
+      // Remove all campaigns
+      campaignKeys.forEach(key => localStorage.removeItem(key));
+      
+      // Update results
+      setResults([]);
+      
+      // Show notification
+      setShowDeleteAllNotification(true);
+      setTimeout(() => setShowDeleteAllNotification(false), 3000);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col p-8">
       <Breadcrumbs currentPage="Search Results" onNavigate={onBack} />
       <div className="max-w-4xl w-full mx-auto space-y-8">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold text-gray-900">Search Results</h1>
-          <button
-            onClick={onBack}
-            className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
-          >
-            Back to Home
-          </button>
+          <div className="space-x-4">
+            <button
+              onClick={handleDeleteAll}
+              className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+            >
+              Delete All Campaigns
+            </button>
+            <button
+              onClick={onBack}
+              className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
+            >
+              Back to Home
+            </button>
+          </div>
         </div>
+
         {results.length === 0 ? (
           <p>No results found for "{searchQuery}"</p>
         ) : (
@@ -619,9 +679,16 @@ const SearchResults = ({ searchQuery, onLoadCampaign, onBack }) => {
           </ul>
         )}
       </div>
+      
       {showDeleteNotification && (
         <div className="fixed bottom-4 right-4 bg-red-500 text-white px-4 py-2 rounded shadow-lg save-notification">
           Campaign deleted successfully!
+        </div>
+      )}
+      
+      {showDeleteAllNotification && (
+        <div className="fixed bottom-4 right-4 bg-red-500 text-white px-4 py-2 rounded shadow-lg save-notification">
+          All campaigns deleted successfully!
         </div>
       )}
     </div>
@@ -731,19 +798,9 @@ const FormView = ({ formData, handleInputChange }) => {
   return (
     <div className="grid grid-cols-12 gap-8">
       <div className="col-span-4 space-y-4">
-        {/* Add the new Header field right at the top */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Header</label>
-          <input
-            type="text"
-            value={formData.header || ''}
-            onChange={(e) => handleInputChange('header', e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-          />
-        </div>
-
         <div className="bg-white p-6 rounded-lg shadow">
           <div className="space-y-4">
+            {/* Campaign ID */}
             <div>
               <label className="block text-sm font-medium text-gray-700">Campaign ID</label>
               <input
@@ -753,6 +810,8 @@ const FormView = ({ formData, handleInputChange }) => {
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
               />
             </div>
+
+            {/* Campaign Name */}
             <div>
               <label className="block text-sm font-medium text-gray-700">Campaign Name</label>
               <input
@@ -762,24 +821,8 @@ const FormView = ({ formData, handleInputChange }) => {
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Preview Text</label>
-              <input
-                type="text"
-                value={formData.previewText || ''}
-                onChange={(e) => handleInputChange('previewText', e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Email Content</label>
-              <textarea
-                value={formData.emailContent || ''}
-                onChange={(e) => handleInputChange('emailContent', e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                rows="10"
-              />
-            </div>
+
+            {/* Subject Line */}
             <div>
               <label className="block text-sm font-medium text-gray-700">Subject Line</label>
               <input
@@ -789,9 +832,40 @@ const FormView = ({ formData, handleInputChange }) => {
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
               />
             </div>
-            {/* Add more form fields as needed */}
+
+            {/* Header */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Header</label>
+              <input
+                type="text"
+                value={formData.header || ''}
+                onChange={(e) => handleInputChange('header', e.target.value)}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+              />
+            </div>
+
+            {/* Email Content */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Email Content</label>
+              <textarea
+                value={formData.emailContent || ''}
+                onChange={(e) => handleInputChange('emailContent', e.target.value)}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                rows="10"
+              />
+            </div>
+
+            {/* Preview Text */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Preview Text</label>
+              <input
+                type="text"
+                value={formData.previewText || ''}
+                onChange={(e) => handleInputChange('previewText', e.target.value)}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+              />
+            </div>
           </div>
-          {/* The "Save Campaign" button has been removed from here */}
         </div>
       </div>
       <div className="col-span-8">
