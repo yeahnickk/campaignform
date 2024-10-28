@@ -365,9 +365,18 @@ const IframeEmailPreview = ({ formData, partner, template }) => {
 
   useEffect(() => {
     const loadTemplate = async () => {
-      if (template?.id === 'COLES_STD_MKT_01') {
-        try {
-          const response = await fetch('/templates/email_preview.html');
+      try {
+        let templatePath = '';
+        
+        // Determine which template to load
+        if (template?.id === 'COLES_STD_MKT_01') {
+          templatePath = '/templates/email_preview.html';
+        } else if (template?.id === 'COLES_TRANS_01') {
+          templatePath = '/templates/ColesTrans.html';
+        }
+
+        if (templatePath) {
+          const response = await fetch(templatePath);
           const html = await response.text();
           
           // Replace all placeholders
@@ -386,15 +395,15 @@ const IframeEmailPreview = ({ formData, partner, template }) => {
             .replace('$OFFERENDDATE$', formData?.[`offerEndDate${selectedOfferIndex}`] || '');
           
           setIframeContent(processedHtml);
-        } catch (error) {
-          console.error('Error loading template:', error);
         }
+      } catch (error) {
+        console.error('Error loading template:', error);
       }
     };
 
     loadTemplate();
 
-    // Separate useEffect for height adjustment
+    // Height adjustment logic
     const adjustHeight = () => {
       if (iframeRef.current) {
         const iframe = iframeRef.current;
