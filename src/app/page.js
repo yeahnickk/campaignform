@@ -1039,34 +1039,31 @@ const convertFormDataToCsv = (formData) => {
 
 const SearchResults = ({ searchQuery, onLoadCampaign, onBack }) => {
   const [campaigns, setCampaigns] = useState([]);
-  const [showDeleteAllModal, setShowDeleteAllModal] = useState(false);
 
   useEffect(() => {
+    // Load campaigns from localStorage
     const savedCampaigns = JSON.parse(localStorage.getItem('campaigns') || '[]');
-    const filteredCampaigns = savedCampaigns.filter(campaign => 
-      campaign.campaignId?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      campaign.campaignName?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    
+    // Filter campaigns based on multiple fields
+    const filteredCampaigns = savedCampaigns.filter(campaign => {
+      const searchLower = searchQuery.toLowerCase();
+      return (
+        // Check multiple fields for matches
+        campaign.campaignId?.toLowerCase().includes(searchLower) ||
+        campaign.campaignName?.toLowerCase().includes(searchLower) ||
+        campaign.cmPartner?.toLowerCase().includes(searchLower) ||
+        campaign.templateName?.toLowerCase().includes(searchLower) ||
+        campaign.subjectLine?.toLowerCase().includes(searchLower) ||
+        campaign.targetAudience?.toLowerCase().includes(searchLower)
+      );
+    });
+    
     setCampaigns(filteredCampaigns);
   }, [searchQuery]);
 
-  const handleDeleteAll = () => {
-    // Show confirmation modal
-    setShowDeleteAllModal(true);
-  };
-
-  const confirmDeleteAll = () => {
-    // Clear all campaigns from localStorage
-    localStorage.removeItem('campaigns');
-    // Update state
-    setCampaigns([]);
-    // Close modal
-    setShowDeleteAllModal(false);
-  };
-
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center mb-6">
         <button
           onClick={onBack}
           className="flex items-center text-blue-600 hover:text-blue-800"
@@ -1074,47 +1071,10 @@ const SearchResults = ({ searchQuery, onLoadCampaign, onBack }) => {
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Home
         </button>
-        
-        {campaigns.length > 0 && (
-          <button
-            onClick={handleDeleteAll}
-            className="flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-          >
-            Delete All Campaigns
-          </button>
-        )}
       </div>
       
       <h1 className="text-2xl font-bold mb-6">Search Results</h1>
       
-      {/* Delete All Confirmation Modal */}
-      {showDeleteAllModal && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">
-              Delete All Campaigns
-            </h3>
-            <p className="text-sm text-gray-500 mb-4">
-              Are you sure you want to delete all saved campaigns? This action cannot be undone.
-            </p>
-            <div className="flex space-x-4">
-              <button
-                onClick={confirmDeleteAll}
-                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
-              >
-                Yes, Delete All
-              </button>
-              <button
-                onClick={() => setShowDeleteAllModal(false)}
-                className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {campaigns.length === 0 ? (
         <p className="text-gray-500">No campaigns found matching "{searchQuery}"</p>
       ) : (
@@ -1153,7 +1113,12 @@ const SearchResults = ({ searchQuery, onLoadCampaign, onBack }) => {
                       Load
                     </button>
                     <button
-                      onClick={() => handleDelete(campaign.campaignId)}
+                      onClick={() => {
+                        const savedCampaigns = JSON.parse(localStorage.getItem('campaigns') || '[]');
+                        const updatedCampaigns = savedCampaigns.filter(c => c.campaignId !== campaign.campaignId);
+                        localStorage.setItem('campaigns', JSON.stringify(updatedCampaigns));
+                        setCampaigns(campaigns.filter(c => c.campaignId !== campaign.campaignId));
+                      }}
                       className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                     >
                       Delete
@@ -1538,12 +1503,27 @@ const WebOfferTileView = ({ formData, handleInputChange }) => {
 };
 
 const App = () => {
-  const [currentPage, setCurrentPage] = useState('home');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentPage, setCurrentPage] = useState('password');
   const [selectedPartner, setSelectedPartner] = useState(null);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [loadedCampaign, setLoadedCampaign] = useState(null);
   const [formData, setFormData] = useState({ cmPartner: '' });
+
+  const handlePasswordSubmit = (password) => {
+    if (password === 'nicksecret') {
+      setIsAuthenticated(true);
+      setCurrentPage('home');
+    } else {
+      alert('Incorrect password');
+    }
+  };
+
+  const handleBypass = () => {
+    setIsAuthenticated(true);
+    setCurrentPage('home');
+  };
 
   const handleSelectForm = (formType) => {
     if (formType === 'edm') {
@@ -1630,6 +1610,53 @@ const App = () => {
     setSelectedTemplate(templateConfig);
     setCurrentPage('form');
   };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full space-y-8">
+          <div>
+            <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+              Enter Password
+            </h2>
+          </div>
+          <form className="mt-8 space-y-6" onSubmit={(e) => {
+            e.preventDefault();
+            handlePasswordSubmit(e.target.password.value);
+          }}>
+            <div className="rounded-md shadow-sm -space-y-px">
+              <div>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  required
+                  className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                  placeholder="Password"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-between">
+              <button
+                type="submit"
+                className="group relative w-full mr-2 flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                Sign in
+              </button>
+              <button
+                type="button"
+                onClick={handleBypass}
+                className="group relative w-full ml-2 flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+              >
+                Bypass
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
