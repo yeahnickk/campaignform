@@ -967,7 +967,15 @@ const FormApp = ({ onNavigate, partner, template, onSave, loadedCampaign }) => {
 
 // Helper function for CSV export
 const convertFormDataToCsv = (formData) => {
-  // Convert form data to CSV format
+  // Function to sanitize content for CSV
+  const sanitizeForCsv = (content) => {
+    if (!content) return '';
+    // Replace literal line breaks with spaces, preserve HTML tags, escape quotes
+    return `"${content
+      .replace(/\r?\n/g, ' ')  // Replace literal line breaks with spaces
+      .replace(/"/g, '""')}"`;  // Escape quotes by doubling them
+  };
+
   const headers = [
     'Campaign ID',
     'Campaign Name',
@@ -991,16 +999,16 @@ const convertFormDataToCsv = (formData) => {
     formData.campaignName || '',
     formData.cmPartner || '',
     formData.templateName || '',
-    formData.subjectLine || '',
-    formData.previewText || '',
-    formData.header || '',
+    sanitizeForCsv(formData.subjectLine),
+    sanitizeForCsv(formData.previewText),
+    sanitizeForCsv(formData.header),
     formData.heroImage || '',
-    formData.emailContent || '',
-    formData.ctaText || '',
+    sanitizeForCsv(formData.emailContent),
+    sanitizeForCsv(formData.ctaText),
     formData.shopNowUrl || '',
-    formData.targetAudience || '',
-    formData.segmentCriteria || '',
-    formData.exclusions || '',
+    sanitizeForCsv(formData.targetAudience),
+    sanitizeForCsv(formData.segmentCriteria),
+    sanitizeForCsv(formData.exclusions),
     formData.offerCount || 0
   ];
 
@@ -1017,9 +1025,9 @@ const convertFormDataToCsv = (formData) => {
     );
     values.push(
       formData[`offerId${i}`] || '',
-      formData[`offerSpend${i}`] || '',
-      formData[`offerGet${i}`] || '',
-      formData[`offerTitle${i}`] || '',
+      sanitizeForCsv(formData[`offerSpend${i}`]),
+      sanitizeForCsv(formData[`offerGet${i}`]),
+      sanitizeForCsv(formData[`offerTitle${i}`]),
       formData[`offerStartDate${i}`] || '',
       formData[`offerEndDate${i}`] || '',
       formData[`wotImageUrl${i}`] || ''
@@ -1416,9 +1424,7 @@ const FormView = ({ formData, handleInputChange }) => {
 
 const WebOfferTilePreview = ({ formData, selectedOfferIndex }) => {
   const [iframeContent, setIframeContent] = useState('');
-  const [iframeHeight, setIframeHeight] = useState('800px');
   const [isLoading, setIsLoading] = useState(true);
-  const iframeRef = useRef(null);
 
   useEffect(() => {
     const loadTemplate = async () => {
@@ -1428,28 +1434,26 @@ const WebOfferTilePreview = ({ formData, selectedOfferIndex }) => {
         const response = await fetch(templatePath);
         let html = await response.text();
         
-        // Define all possible offer field patterns
-        const offerFields = [
-          'OFFERGET',
-          'OFFERSPEND',
-          'OFFERTITLE',
-          'OFFERENDDATE',
-          'OFFERSTARTDATE',
-          'OFFERID',
-          'WOTIMAGEURL'
-        ];
+        // Create an object with the actual values from the form
+        const selectedOffer = {
+          offerGet: formData[`offerGet${selectedOfferIndex}`],
+          offerSpend: formData[`offerSpend${selectedOfferIndex}`],
+          offerTitle: formData[`offerTitle${selectedOfferIndex}`],
+          offerEndDate: formData[`offerEndDate${selectedOfferIndex}`],
+          offerStartDate: formData[`offerStartDate${selectedOfferIndex}`],
+          offerId: formData[`offerId${selectedOfferIndex}`],
+          wotImageUrl: formData[`wotImageUrl${selectedOfferIndex}`]
+        };
 
-        // Replace all matching placeholders with their corresponding values
-        offerFields.forEach(field => {
-          const placeholder = `$${field}$`;
-          const formDataKey = field.toLowerCase();
-          if (html.includes(placeholder)) {
-            html = html.replace(
-              placeholder, 
-              formData?.[`${formDataKey}${selectedOfferIndex}`] || ''
-            );
-          }
-        });
+        // Replace each placeholder with its corresponding value
+        html = html
+          .replace(/\$OFFERGET\$/g, selectedOffer.offerGet || '')
+          .replace(/\$OFFERSPEND\$/g, selectedOffer.offerSpend || '')
+          .replace(/\$OFFERTITLE\$/g, selectedOffer.offerTitle || '')
+          .replace(/\$OFFERENDDATE\$/g, selectedOffer.offerEndDate || '')
+          .replace(/\$OFFERSTARTDATE\$/g, selectedOffer.offerStartDate || '')
+          .replace(/\$OFFERID\$/g, selectedOffer.offerId || '')
+          .replace(/\$WOTIMAGEURL\$/g, selectedOffer.wotImageUrl || '');
         
         setIframeContent(html);
         setIsLoading(false);
@@ -1471,11 +1475,10 @@ const WebOfferTilePreview = ({ formData, selectedOfferIndex }) => {
       )}
       <div className="relative">
         <iframe
-          ref={iframeRef}
           srcDoc={iframeContent}
           title="Web Offer Tile Preview"
           className="w-full border-0"
-          style={{ height: iframeHeight }}
+          style={{ height: '800px' }}
           sandbox="allow-same-origin allow-scripts"
           loading="lazy"
         />
