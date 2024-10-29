@@ -856,16 +856,7 @@ const FormApp = ({ onNavigate, partner, template, onSave, loadedCampaign }) => {
         {activeView !== 'campaignId' && (
           <>
             {/* Header Section */}
-            <div className="bg-white shadow relative">
-              {/* Success Notification */}
-              {showSaveNotification && (
-                <div className="absolute top-0 left-0 right-0 transform -translate-y-full">
-                  <div className="bg-green-500 text-white px-4 py-2 text-center">
-                    Campaign saved successfully!
-                  </div>
-                </div>
-              )}
-
+            <div className="bg-white shadow">
               <div className="px-4 sm:px-6 lg:max-w-[1920px] lg:mx-auto lg:px-8">
                 <div className="py-6 md:flex md:items-center md:justify-between">
                   <div className="flex-1 min-w-0">
@@ -873,14 +864,26 @@ const FormApp = ({ onNavigate, partner, template, onSave, loadedCampaign }) => {
                       <div>
                         <div className="flex items-center">
                           <h1 className="text-2xl font-bold leading-7 text-gray-900 sm:leading-9 sm:truncate">
-                            {formData.campaignName || 'New Campaign Brief'}
+                            Campaign Brief
                           </h1>
                         </div>
-                        <dl className="mt-2 flex flex-col sm:mt-1 sm:flex-row sm:flex-wrap">
-                          <dt className="sr-only">Campaign ID</dt>
-                          <dd className="flex items-center text-sm text-gray-500 font-medium sm:mr-6">
+                        <dl className="mt-6 flex flex-col sm:mt-1 sm:flex-row sm:flex-wrap">
+                          <div className="mt-2 flex items-center text-sm text-gray-500 sm:mr-6">
+                            <span className="font-medium text-gray-900 mr-2">Campaign ID:</span>
                             {formData.campaignId}
-                          </dd>
+                          </div>
+                          <div className="mt-2 flex items-center text-sm text-gray-500 sm:mr-6">
+                            <span className="font-medium text-gray-900 mr-2">Campaign Name:</span>
+                            {formData.campaignName}
+                          </div>
+                          <div className="mt-2 flex items-center text-sm text-gray-500 sm:mr-6">
+                            <span className="font-medium text-gray-900 mr-2">Partner:</span>
+                            {partner}
+                          </div>
+                          <div className="mt-2 flex items-center text-sm text-gray-500">
+                            <span className="font-medium text-gray-900 mr-2">Template:</span>
+                            {template.name}
+                          </div>
                         </dl>
                       </div>
                     </div>
