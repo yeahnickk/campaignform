@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ArrowRight, Mail, Clock, FileText, Download, Bold, Italic, List, ChevronRight, Home, ArrowUp, Link, ArrowLeft } from "lucide-react";
 import Papa from 'papaparse';
-
+import NotificationPreview from '../components/NotificationPreview';
 // Basic HTML Editor Component
 const BasicHtmlEditor = ({ value, onChange }) => {
   const [showLinkModal, setShowLinkModal] = useState(false);
@@ -300,17 +300,20 @@ const HomePage = ({ onSelectForm, onSearch, onLoadCsvBrief }) => {
               </div>
             </div>
 
-            {/* Modified WOT Card */}
-            <div className="bg-white p-6 space-y-4 rounded-lg shadow opacity-75">
+            {/* Modified Push Notification Card (replacing WOT Card) */}
+            <div 
+              className="bg-white p-6 space-y-4 rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => onSelectForm('notification')}
+            >
               <div className="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center">
                 <Clock className="h-6 w-6 text-green-600" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-gray-900">WOT Only</h2>
-                <p className="text-sm text-gray-600 mt-2">Coming soon: Generate WOT documentation</p>
+                <h2 className="text-xl font-semibold text-gray-900">Push Notification Preview</h2>
+                <p className="text-sm text-gray-600 mt-2">Preview push notification appearance</p>
               </div>
               <div className="flex items-center text-green-600">
-                <span className="text-sm font-medium">Coming soon</span>
+                <span className="text-sm font-medium">Get started</span>
                 <ArrowRight className="h-4 w-4 ml-2" />
               </div>
             </div>
@@ -796,6 +799,33 @@ const FormApp = ({ onNavigate, partner, template, onSave, loadedCampaign }) => {
   return (
     <Layout currentPage="Campaign Brief" partner={partner} template={template.name} onNavigate={onNavigate}>
       <div className="max-w-[1920px] w-full mx-auto space-y-8">
+        {/* Save Notification */}
+        {showSaveNotification && (
+          <div 
+            className="fixed top-4 right-4 z-50 pointer-events-none"
+            aria-live="polite"
+          >
+            <div className="bg-gray-900 text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-3 transform transition-all duration-300 ease-out opacity-90 hover:opacity-100">
+              <div className="flex-shrink-0 w-5 h-5">
+                <svg 
+                  className="text-green-400" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                >
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth={2} 
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </div>
+              <p className="font-medium text-sm">Changes saved successfully</p>
+            </div>
+          </div>
+        )}
+
         {/* Existing Campaign Modal */}
         {showExistingCampaignModal && (
           <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
@@ -1506,31 +1536,18 @@ const WebOfferTileView = ({ formData, handleInputChange }) => {
 };
 
 const App = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [currentPage, setCurrentPage] = useState('password');
+  const [currentPage, setCurrentPage] = useState('home');
   const [selectedPartner, setSelectedPartner] = useState(null);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [loadedCampaign, setLoadedCampaign] = useState(null);
   const [formData, setFormData] = useState({ cmPartner: '' });
 
-  const handlePasswordSubmit = (password) => {
-    if (password === 'nicksecret') {
-      setIsAuthenticated(true);
-      setCurrentPage('home');
-    } else {
-      alert('Incorrect password');
-    }
-  };
-
-  const handleBypass = () => {
-    setIsAuthenticated(true);
-    setCurrentPage('home');
-  };
-
   const handleSelectForm = (formType) => {
     if (formType === 'edm') {
       setCurrentPage('partner');
+    } else if (formType === 'notification') {
+      setCurrentPage('notification');
     }
   };
 
@@ -1614,53 +1631,6 @@ const App = () => {
     setCurrentPage('form');
   };
 
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8">
-          <div>
-            <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-              Enter Password
-            </h2>
-          </div>
-          <form className="mt-8 space-y-6" onSubmit={(e) => {
-            e.preventDefault();
-            handlePasswordSubmit(e.target.password.value);
-          }}>
-            <div className="rounded-md shadow-sm -space-y-px">
-              <div>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  required
-                  className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                  placeholder="Password"
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-between">
-              <button
-                type="submit"
-                className="group relative w-full mr-2 flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                Sign in
-              </button>
-              <button
-                type="button"
-                onClick={handleBypass}
-                className="group relative w-full ml-2 flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
-              >
-                Bypass
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <>
       {currentPage === 'home' && (
@@ -1693,11 +1663,21 @@ const App = () => {
           partner={selectedPartner} 
           template={selectedTemplate}
           onSave={handleSaveCampaign}
-          loadedCampaign={loadedCampaign}  // This now contains the CSV data
+          loadedCampaign={loadedCampaign}
         />
+      )}
+      {currentPage === 'notification' && (
+        <Layout currentPage="Push Notification Preview" onNavigate={handleNavigate}>
+          <div className="flex-1 min-w-0">
+            <div className="bg-white p-6 rounded-lg shadow">
+              <NotificationPreview />
+            </div>
+          </div>
+        </Layout>
       )}
     </>
   );
 };
 
 export default App;
+
