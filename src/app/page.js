@@ -557,18 +557,50 @@ const DataTeamView = ({ formData, handleInputChange }) => {
 
 const IframeEmailPreview = ({ formData, partner, template }) => {
   const [iframeContent, setIframeContent] = useState('');
-  const [iframeHeight, setIframeHeight] = useState('800px');
+  const [deviceType, setDeviceType] = useState('desktop');
+  const [emailClient, setEmailClient] = useState('default');
+  const [colorScheme, setColorScheme] = useState('light');
   const [selectedOfferIndex, setSelectedOfferIndex] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
   const iframeRef = useRef(null);
+
+  // Device width mappings
+  const deviceWidths = {
+    desktop: '100%',
+    tablet: '768px',
+    mobile: '375px'
+  };
+
+  // Email client specific styles
+  const emailClientStyles = {
+    default: '',
+    gmail: `
+      .email-content { font-family: Arial, sans-serif; }
+      .email-body { max-width: 800px; margin: 0 auto; }
+    `,
+    outlook: `
+      .email-content { font-family: 'Segoe UI', sans-serif; }
+      .email-body { max-width: 650px; margin: 0 auto; }
+    `,
+    apple: `
+      .email-content { font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+      .email-body { max-width: 720px; margin: 0 auto; }
+    `
+  };
+
+  // Color scheme styles
+  const colorSchemeStyles = {
+    light: '',
+    dark: `
+      body { background-color: #1a1a1a; color: #ffffff; }
+      .email-content { background-color: #2d2d2d; }
+      a { color: #66b3ff; }
+    `
+  };
 
   useEffect(() => {
     const loadTemplate = async () => {
-      setIsLoading(true);
       try {
         let templatePath = '';
-        
-        // Determine which template to load
         if (template?.id === 'COLES_STD_MKT_01') {
           templatePath = '/templates/email_preview.html';
         } else if (template?.id === 'COLES_TRANS_01') {
@@ -577,114 +609,132 @@ const IframeEmailPreview = ({ formData, partner, template }) => {
 
         if (templatePath) {
           const response = await fetch(templatePath);
-          const html = await response.text();
+          let html = await response.text();
           
-          // Replace all placeholders
-          let processedHtml = html
+          // Get selected offer data
+          const selectedOffer = {
+            id: formData[`offerId${selectedOfferIndex}`],
+            spend: formData[`offerSpend${selectedOfferIndex}`],
+            get: formData[`offerGet${selectedOfferIndex}`],
+            title: formData[`offerTitle${selectedOfferIndex}`],
+            startDate: formData[`offerStartDate${selectedOfferIndex}`],
+            endDate: formData[`offerEndDate${selectedOfferIndex}`],
+            imageUrl: formData[`wotImageUrl${selectedOfferIndex}`]
+          };
+          
+          // Replace placeholders
+          html = html
             .replace('$HEADER$', formData?.header || '')
             .replace('$HERO_IMAGE$', formData?.heroImage || '')
             .replace('$EMAIL_CONTENT$', formData?.emailContent || '')
-            .replace('$MAINCTATEXT$', formData?.ctaText || '');
+            .replace('$MAINCTATEXT$', formData?.ctaText || '')
+            // Add offer placeholders
+            .replace('$OFFER_ID$', selectedOffer.id || '')
+            .replace('$OFFER_SPEND$', selectedOffer.spend || '')
+            .replace('$OFFER_GET$', selectedOffer.get || '')
+            .replace('$OFFER_TITLE$', selectedOffer.title || '')
+            .replace('$OFFER_START_DATE$', selectedOffer.startDate || '')
+            .replace('$OFFER_END_DATE$', selectedOffer.endDate || '')
+            .replace('$OFFER_IMAGE$', selectedOffer.imageUrl || '');
 
-          // Replace offer placeholders
-          processedHtml = processedHtml
-            .replace('$OFFERSPEND$', formData?.[`offerSpend${selectedOfferIndex}`] || '')
-            .replace('$OFFERGET$', formData?.[`offerGet${selectedOfferIndex}`] || '')
-            .replace('$OFFERTITLE$', formData?.[`offerTitle${selectedOfferIndex}`] || '')
-            .replace('$OFFERSTARTDATE$', formData?.[`offerStartDate${selectedOfferIndex}`] || '')
-            .replace('$OFFERENDDATE$', formData?.[`offerEndDate${selectedOfferIndex}`] || '');
-          
-          setIframeContent(processedHtml);
-          setIsLoading(false);
+          // Add email client and color scheme styles
+          html = html.replace('</head>',
+            `<style>
+              ${emailClientStyles[emailClient]}
+              ${colorSchemeStyles[colorScheme]}
+            </style>
+            </head>`
+          );
+
+          setIframeContent(html);
         }
       } catch (error) {
         console.error('Error loading template:', error);
-        setIsLoading(false);
       }
     };
 
     loadTemplate();
-
-    // Height adjustment logic
-    const adjustHeight = () => {
-      if (iframeRef.current) {
-        const iframe = iframeRef.current;
-        try {
-          const height = iframe.contentWindow.document.documentElement.scrollHeight;
-          setIframeHeight(`${height}px`);
-        } catch (error) {
-          console.log('Setting default height due to security restriction');
-          setIframeHeight('800px');
-        }
-      }
-    };
-
-    const timer = setTimeout(adjustHeight, 100);
-    return () => clearTimeout(timer);
-  }, [template?.id, formData, selectedOfferIndex]);
-
-  // Generate offer selector options based on offerCount
-  const offerCount = formData?.offerCount || 0;
-  const offerOptions = Array.from({ length: offerCount }, (_, index) => index + 1);
+  }, [template?.id, formData, emailClient, colorScheme, selectedOfferIndex]);
 
   return (
     <div className="space-y-4">
-      {/* Subject Line and Preheader Preview */}
-      <div className="bg-gray-100 p-4 rounded-lg space-y-4">
-        <div>
-          <div className="text-sm text-gray-500 mb-1">Subject Line Preview:</div>
-          <div className="font-medium">
-            {formData?.subjectLine || 'No subject line entered'}
-          </div>
+      {/* Email Info Preview */}
+      <div className="bg-white p-4 rounded-lg shadow-sm space-y-3">
+        <div className="flex items-center space-x-2">
+          <span className="text-sm font-medium text-gray-600">Subject Line:</span>
+          <span className="text-sm text-gray-800">{formData?.subjectLine || 'No subject'}</span>
         </div>
-        <div>
-          <div className="text-sm text-gray-500 mb-1">Preheader Text Preview:</div>
-          <div className="font-medium">
-            {formData?.previewText || 'No preheader text entered'}
-          </div>
+        <div className="flex items-center space-x-2">
+          <span className="text-sm font-medium text-gray-600">Preview Text:</span>
+          <span className="text-sm text-gray-800">{formData?.previewText || 'No preview text'}</span>
         </div>
-        
-        {offerCount > 0 && (
-          <div>
-            <div className="text-sm text-gray-500 mb-1">Select Offer to Preview:</div>
+      </div>
+
+      {/* Offer Selection */}
+      {formData.offerCount > 0 && (
+        <div className="bg-white p-4 rounded-lg shadow-sm">
+          <div className="flex items-center space-x-2">
+            <span className="text-sm font-medium text-gray-600">Preview Offer:</span>
             <select
               value={selectedOfferIndex}
               onChange={(e) => setSelectedOfferIndex(Number(e.target.value))}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+              className="bg-gray-100 rounded-md px-3 py-1 text-sm text-gray-600 border-none focus:ring-2 focus:ring-blue-500"
             >
-              {offerOptions.map((num) => {
-                const index = num - 1;
+              {[...Array(formData.offerCount)].map((_, index) => {
                 const offerId = formData[`offerId${index}`];
-                const displayName = offerId ? `Offer - ${offerId}` : `Offer ${num}`;
                 return (
                   <option key={index} value={index}>
-                    {displayName}
+                    {offerId ? `Offer - ${offerId}` : `Offer ${index + 1}`}
                   </option>
                 );
               })}
             </select>
           </div>
-        )}
-      </div>
-
-      {/* Only show debug message while loading */}
-      {isLoading && (
-        <div className="text-xs text-gray-500 mb-2">
-          Debug: Attempting to load template
         </div>
       )}
 
-      {/* Email Preview Iframe */}
-      <div className="relative">
-        <iframe
-          ref={iframeRef}
-          srcDoc={iframeContent}
-          title="Email Preview"
-          className="w-full border-0"
-          style={{ height: iframeHeight }}
-          sandbox="allow-same-origin allow-scripts"
-          loading="lazy"
-        />
+      {/* Preview Controls */}
+      <PreviewControls
+        deviceType={deviceType}
+        setDeviceType={setDeviceType}
+        emailClient={emailClient}
+        setEmailClient={setEmailClient}
+        colorScheme={colorScheme}
+        setColorScheme={setColorScheme}
+      />
+
+      {/* Preview Container */}
+      <div className="bg-gray-100 p-4 rounded-lg transition-all duration-300"
+           style={{ maxWidth: deviceWidths[deviceType], margin: '0 auto' }}>
+        <div className={`bg-white rounded-lg shadow-lg overflow-hidden transition-all duration-300`}>
+          {/* Email Client Header Simulation */}
+          {emailClient !== 'default' && (
+            <div className="bg-gray-50 border-b px-4 py-2">
+              <div className="flex items-center space-x-2">
+                <span className="text-sm font-medium text-gray-600">
+                  {emailClient === 'gmail' ? 'Gmail' : 
+                   emailClient === 'outlook' ? 'Outlook' : 'Apple Mail'}
+                </span>
+                <span className="text-sm text-gray-400">
+                  {formData?.subjectLine || 'No subject'}
+                </span>
+              </div>
+            </div>
+          )}
+          
+          {/* Email Preview */}
+          <iframe
+            ref={iframeRef}
+            srcDoc={iframeContent}
+            title="Email Preview"
+            className="w-full transition-all duration-300"
+            style={{ 
+              height: '800px',
+              backgroundColor: colorScheme === 'dark' ? '#1a1a1a' : 'white'
+            }}
+            sandbox="allow-same-origin allow-scripts"
+          />
+        </div>
       </div>
     </div>
   );
@@ -1532,7 +1582,7 @@ const WebOfferTileView = ({ formData, handleInputChange }) => {
                 <select
                   value={selectedOfferIndex}
                   onChange={(e) => setSelectedOfferIndex(Number(e.target.value))}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                  className="bg-gray-100 rounded-md px-3 py-1 text-sm text-gray-600 border-none focus:ring-2 focus:ring-blue-500"
                 >
                   {[...Array(formData.offerCount)].map((_, index) => {
                     const offerId = formData[`offerId${index}`];
@@ -1562,6 +1612,98 @@ const WebOfferTileView = ({ formData, handleInputChange }) => {
           ) : (
             <p className="text-gray-500">Please add offers to see the preview.</p>
           )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const PreviewControls = ({ 
+  deviceType, 
+  setDeviceType, 
+  emailClient, 
+  setEmailClient,
+  colorScheme,
+  setColorScheme
+}) => {
+  return (
+    <div className="bg-white p-4 rounded-lg shadow-sm mb-4 flex flex-wrap gap-4">
+      {/* Device Type Toggle */}
+      <div className="flex items-center space-x-2">
+        <span className="text-sm text-gray-600">Device:</span>
+        <div className="bg-gray-100 rounded-lg p-1 flex space-x-1">
+          <button
+            onClick={() => setDeviceType('desktop')}
+            className={`px-3 py-1 rounded-md text-sm ${
+              deviceType === 'desktop'
+                ? 'bg-white shadow text-blue-600'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            Desktop
+          </button>
+          <button
+            onClick={() => setDeviceType('tablet')}
+            className={`px-3 py-1 rounded-md text-sm ${
+              deviceType === 'tablet'
+                ? 'bg-white shadow text-blue-600'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            Tablet
+          </button>
+          <button
+            onClick={() => setDeviceType('mobile')}
+            className={`px-3 py-1 rounded-md text-sm ${
+              deviceType === 'mobile'
+                ? 'bg-white shadow text-blue-600'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            Mobile
+          </button>
+        </div>
+      </div>
+
+      {/* Email Client Selector */}
+      <div className="flex items-center space-x-2">
+        <span className="text-sm text-gray-600">Email Client:</span>
+        <select
+          value={emailClient}
+          onChange={(e) => setEmailClient(e.target.value)}
+          className="bg-gray-100 rounded-md px-3 py-1 text-sm text-gray-600 border-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="default">Default</option>
+          <option value="gmail">Gmail</option>
+          <option value="outlook">Outlook</option>
+          <option value="apple">Apple Mail</option>
+        </select>
+      </div>
+
+      {/* Color Scheme Toggle */}
+      <div className="flex items-center space-x-2">
+        <span className="text-sm text-gray-600">Theme:</span>
+        <div className="bg-gray-100 rounded-lg p-1 flex space-x-1">
+          <button
+            onClick={() => setColorScheme('light')}
+            className={`px-3 py-1 rounded-md text-sm ${
+              colorScheme === 'light'
+                ? 'bg-white shadow text-blue-600'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            Light
+          </button>
+          <button
+            onClick={() => setColorScheme('dark')}
+            className={`px-3 py-1 rounded-md text-sm ${
+              colorScheme === 'dark'
+                ? 'bg-white shadow text-blue-600'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            Dark
+          </button>
         </div>
       </div>
     </div>
