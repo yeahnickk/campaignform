@@ -1146,15 +1146,29 @@ const convertFormDataToCsv = (formData) => {
 
 const SearchResults = ({ searchQuery, onLoadCampaign, onBack }) => {
   const [campaigns, setCampaigns] = useState([]);
+  const [selectedCampaigns, setSelectedCampaigns] = useState([]);
+  const [filteredCampaigns, setFilteredCampaigns] = useState([]);
   const [storageStats, setStorageStats] = useState({
     used: 0,
-    total: 5 * 1024 * 1024, // 5MB conservative limit
+    total: 5 * 1024 * 1024,
     count: 0
   });
+  const [filters, setFilters] = useState({
+    partner: 'all',
+    template: 'all',
+    dateRange: 'all',
+    offerCount: 'all',
+  });
+  const [sortBy, setSortBy] = useState('newest');
+
+  // Get unique values for filter dropdowns
+  const getUniqueValues = (key) => {
+    return [...new Set(campaigns.map(campaign => campaign[key]))].filter(Boolean);
+  };
 
   useEffect(() => {
     const savedCampaigns = JSON.parse(localStorage.getItem('campaigns') || '[]');
-    const filteredCampaigns = savedCampaigns.filter(campaign => {
+    const searchFiltered = savedCampaigns.filter(campaign => {
       const searchLower = searchQuery.toLowerCase();
       return (
         campaign.campaignId?.toLowerCase().includes(searchLower) ||
@@ -1169,77 +1183,201 @@ const SearchResults = ({ searchQuery, onLoadCampaign, onBack }) => {
       count: savedCampaigns.length
     });
     
-    setCampaigns(filteredCampaigns);
+    setCampaigns(searchFiltered);
+    setFilteredCampaigns(searchFiltered);
+    setSelectedCampaigns([]);
   }, [searchQuery]);
+
+  // Apply filters and sorting
+  useEffect(() => {
+    let result = [...campaigns];
+
+    // Apply filters
+    if (filters.partner !== 'all') {
+      result = result.filter(campaign => campaign.cmPartner === filters.partner);
+    }
+    if (filters.template !== 'all') {
+      result = result.filter(campaign => campaign.templateName === filters.template);
+    }
+    if (filters.offerCount !== 'all') {
+      result = result.filter(campaign => {
+        const count = parseInt(campaign.offerCount || 0);
+        switch (filters.offerCount) {
+          case 'none': return count === 0;
+          case 'single': return count === 1;
+          case 'multiple': return count > 1;
+          default: return true;
+        }
+      });
+    }
+
+    // Apply sorting
+    result.sort((a, b) => {
+      switch (sortBy) {
+        case 'newest':
+          return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+        case 'oldest':
+          return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
+        case 'name':
+          return (a.campaignName || '').localeCompare(b.campaignName || '');
+        case 'partner':
+          return (a.cmPartner || '').localeCompare(b.cmPartner || '');
+        default:
+          return 0;
+      }
+    });
+
+    setFilteredCampaigns(result);
+  }, [campaigns, filters, sortBy]);
+
+  // ... existing delete handlers ...
+
+  // Storage Bar Component
+  const StorageBar = () => (
+    <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
+      <div className="flex justify-between items-center mb-2">
+        <h3 className="text-sm font-medium text-gray-700">Local Storage Usage</h3>
+        <span className="text-sm text-gray-500">
+          {storageStats.count} {storageStats.count === 1 ? 'brief' : 'briefs'} stored
+        </span>
+      </div>
+      <div className="w-full bg-gray-200 rounded-full h-2.5">
+        <div 
+          className={`h-2.5 rounded-full ${
+            (storageStats.used / storageStats.total) > 0.8 
+              ? 'bg-red-600' 
+              : (storageStats.used / storageStats.total) > 0.6 
+                ? 'bg-yellow-400' 
+                : 'bg-green-600'
+          }`}
+          style={{ width: `${(storageStats.used / storageStats.total) * 100}%` }}
+        ></div>
+      </div>
+      <div className="flex justify-between mt-1">
+        <span className="text-xs text-gray-500">
+          {formatBytes(storageStats.used)} used
+        </span>
+        <span className="text-xs text-gray-500">
+          {formatBytes(storageStats.total)} total
+        </span>
+      </div>
+    </div>
+  );
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Storage Usage Bar */}
-      <div className="bg-white p-4 rounded-lg shadow mb-6">
-        <div className="flex justify-between items-center mb-2">
-          <h3 className="text-sm font-medium text-gray-700">Local Storage Usage</h3>
-          <span className="text-sm text-gray-500">
-            {storageStats.count} {storageStats.count === 1 ? 'brief' : 'briefs'} stored
-          </span>
+      {/* Storage Bar */}
+      <StorageBar />
+
+      {/* Breadcrumbs */}
+      <Breadcrumbs currentPage="Search Results" onNavigate={onBack} />
+
+      {/* Filter Bar - NEW */}
+      <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
+        <div className="flex flex-wrap gap-4">
+          {/* Partner Filter */}
+          <div className="flex-1 min-w-[200px]">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Partner</label>
+            <select
+              value={filters.partner}
+              onChange={(e) => setFilters(prev => ({ ...prev, partner: e.target.value }))}
+              className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+            >
+              <option value="all">All Partners</option>
+              {getUniqueValues('cmPartner').map(partner => (
+                <option key={partner} value={partner}>{partner}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Template Filter */}
+          <div className="flex-1 min-w-[200px]">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Template</label>
+            <select
+              value={filters.template}
+              onChange={(e) => setFilters(prev => ({ ...prev, template: e.target.value }))}
+              className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+            >
+              <option value="all">All Templates</option>
+              {getUniqueValues('templateName').map(template => (
+                <option key={template} value={template}>{template}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Sort By */}
+          <div className="flex-1 min-w-[200px]">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Sort By</label>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+            >
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+              <option value="name">Campaign Name</option>
+              <option value="partner">Partner</option>
+            </select>
+          </div>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-2.5">
-          <div 
-            className={`h-2.5 rounded-full ${
-              (storageStats.used / storageStats.total) > 0.8 
-                ? 'bg-red-600' 
-                : (storageStats.used / storageStats.total) > 0.6 
-                  ? 'bg-yellow-400' 
-                  : 'bg-green-600'
-            }`}
-            style={{ width: `${(storageStats.used / storageStats.total) * 100}%` }}
-          ></div>
-        </div>
-        <div className="flex justify-between mt-1">
-          <span className="text-xs text-gray-500">
-            {formatBytes(storageStats.used)} used
-          </span>
-          <span className="text-xs text-gray-500">
-            {formatBytes(storageStats.total)} total
-          </span>
+
+        {/* Filter Stats */}
+        <div className="mt-2 text-sm text-gray-500">
+          Showing {filteredCampaigns.length} of {campaigns.length} campaigns
         </div>
       </div>
 
-      {/* Search Results */}
-      <div className="flex items-center mb-6">
-        <button
-          onClick={onBack}
-          className="flex items-center text-blue-600 hover:text-blue-800"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Home
-        </button>
+      {/* Actions Bar */}
+      <div className="flex items-center justify-between mb-6">
+        {/* ... existing actions ... */}
       </div>
-      
-      <h1 className="text-2xl font-bold mb-6">Search Results</h1>
-      
-      {campaigns.length === 0 ? (
-        <p className="text-gray-500">No campaigns found matching "{searchQuery}"</p>
+
+      {/* Campaign List */}
+      {filteredCampaigns.length === 0 ? (
+        <p className="text-gray-500">No campaigns found matching your criteria</p>
       ) : (
-        <div className="bg-white shadow overflow-hidden sm:rounded-md">
+        <div className="bg-white shadow overflow-hidden sm:rounded-lg">
           <ul className="divide-y divide-gray-200">
-            {campaigns.map((campaign) => (
-              <li key={campaign.campaignId}>
-                <button
-                  onClick={() => onLoadCampaign(campaign)}
-                  className="w-full text-left hover:bg-gray-50 p-4"
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-blue-600">
-                        {campaign.campaignId}
-                      </p>
-                      <p className="text-sm text-gray-900 mt-1">
-                        {campaign.campaignName}
-                      </p>
+            {filteredCampaigns.map((campaign) => (
+              <li key={campaign.campaignId} className="hover:bg-gray-50">
+                <div className="flex items-center p-4">
+                  <input
+                    type="checkbox"
+                    checked={selectedCampaigns.includes(campaign.campaignId)}
+                    onChange={() => handleSelectCampaign(campaign.campaignId)}
+                    className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 mr-4"
+                  />
+                  <div className="flex-grow cursor-pointer" onClick={() => onLoadCampaign(campaign)}>
+                    <div className="flex justify-between items-start">
+                      <div className="space-y-1">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm font-medium text-blue-600">
+                            {campaign.campaignId}
+                          </span>
+                          <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600">
+                            {campaign.cmPartner}
+                          </span>
+                        </div>
+                        <p className="text-sm font-medium text-gray-900">
+                          {campaign.campaignName}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          Template: {campaign.templateName}
+                        </p>
+                      </div>
+                      <div className="text-right space-y-1">
+                        <p className="text-xs text-gray-500">
+                          Offers: {campaign.offerCount || 0}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          Subject: {campaign.subjectLine?.substring(0, 30)}
+                          {campaign.subjectLine?.length > 30 ? '...' : ''}
+                        </p>
+                      </div>
                     </div>
-                    <ChevronRight className="h-5 w-5 text-gray-400" />
                   </div>
-                </button>
+                  <ChevronRight className="h-5 w-5 text-gray-400 ml-4" />
+                </div>
               </li>
             ))}
           </ul>
