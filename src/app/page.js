@@ -129,7 +129,10 @@ const BasicHtmlEditor = ({ value, onChange }) => {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={handleKeyDown}
-        className="w-full min-h-[200px] p-2 border rounded font-mono text-sm"
+        spellCheck={true}
+        data-gramm="false"
+        lang="en"
+        className="w-full min-h-[200px] p-2 border rounded text-sm"
         placeholder="Enter your content here... Use the buttons above to add HTML formatting. Press Enter for new lines."
       />
 
@@ -188,9 +191,22 @@ const BasicHtmlEditor = ({ value, onChange }) => {
   );
 };
 
+export const formatBytes = (bytes) => {
+  if (!bytes || bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
+
 const HomePage = ({ onSelectForm, onSearch, onLoadCsvBrief }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const fileInputRef = useRef(null);
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    onSearch(searchQuery);
+  };
 
   const handleUploadClick = () => {
     fileInputRef.current?.click();
@@ -265,11 +281,6 @@ const HomePage = ({ onSelectForm, onSearch, onLoadCsvBrief }) => {
     }
 
     return formData;
-  };
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    onSearch(searchQuery);
   };
 
   return (
@@ -796,9 +807,22 @@ const FormApp = ({ onNavigate, partner, template, onSave, loadedCampaign }) => {
     }
   };
 
+  // Add keyboard shortcut handler
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+        e.preventDefault();
+        handleSave();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [formData]); // Add any other dependencies needed for handleSave
+
   return (
     <Layout currentPage="Campaign Brief" partner={partner} template={template.name} onNavigate={onNavigate}>
-      <div className="max-w-[1920px] w-full mx-auto space-y-8">
+      <div className="max-w-[1920px] w-full mx-auto space-y-8 relative">
         {/* Save Notification */}
         {showSaveNotification && (
           <div 
@@ -1072,23 +1096,27 @@ const convertFormDataToCsv = (formData) => {
 
 const SearchResults = ({ searchQuery, onLoadCampaign, onBack }) => {
   const [campaigns, setCampaigns] = useState([]);
+  const [storageStats, setStorageStats] = useState({
+    used: 0,
+    total: 5 * 1024 * 1024, // 5MB conservative limit
+    count: 0
+  });
 
   useEffect(() => {
-    // Load campaigns from localStorage
     const savedCampaigns = JSON.parse(localStorage.getItem('campaigns') || '[]');
-    
-    // Filter campaigns based on multiple fields
     const filteredCampaigns = savedCampaigns.filter(campaign => {
       const searchLower = searchQuery.toLowerCase();
       return (
-        // Check multiple fields for matches
         campaign.campaignId?.toLowerCase().includes(searchLower) ||
-        campaign.campaignName?.toLowerCase().includes(searchLower) ||
-        campaign.cmPartner?.toLowerCase().includes(searchLower) ||
-        campaign.templateName?.toLowerCase().includes(searchLower) ||
-        campaign.subjectLine?.toLowerCase().includes(searchLower) ||
-        campaign.targetAudience?.toLowerCase().includes(searchLower)
+        campaign.campaignName?.toLowerCase().includes(searchLower)
       );
+    });
+    
+    const storageUsed = new Blob([JSON.stringify(savedCampaigns)]).size;
+    setStorageStats({
+      used: storageUsed,
+      total: 5 * 1024 * 1024,
+      count: savedCampaigns.length
     });
     
     setCampaigns(filteredCampaigns);
@@ -1096,6 +1124,37 @@ const SearchResults = ({ searchQuery, onLoadCampaign, onBack }) => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Storage Usage Bar */}
+      <div className="bg-white p-4 rounded-lg shadow mb-6">
+        <div className="flex justify-between items-center mb-2">
+          <h3 className="text-sm font-medium text-gray-700">Local Storage Usage</h3>
+          <span className="text-sm text-gray-500">
+            {storageStats.count} {storageStats.count === 1 ? 'brief' : 'briefs'} stored
+          </span>
+        </div>
+        <div className="w-full bg-gray-200 rounded-full h-2.5">
+          <div 
+            className={`h-2.5 rounded-full ${
+              (storageStats.used / storageStats.total) > 0.8 
+                ? 'bg-red-600' 
+                : (storageStats.used / storageStats.total) > 0.6 
+                  ? 'bg-yellow-400' 
+                  : 'bg-green-600'
+            }`}
+            style={{ width: `${(storageStats.used / storageStats.total) * 100}%` }}
+          ></div>
+        </div>
+        <div className="flex justify-between mt-1">
+          <span className="text-xs text-gray-500">
+            {formatBytes(storageStats.used)} used
+          </span>
+          <span className="text-xs text-gray-500">
+            {formatBytes(storageStats.total)} total
+          </span>
+        </div>
+      </div>
+
+      {/* Search Results */}
       <div className="flex items-center mb-6">
         <button
           onClick={onBack}
@@ -1115,49 +1174,22 @@ const SearchResults = ({ searchQuery, onLoadCampaign, onBack }) => {
           <ul className="divide-y divide-gray-200">
             {campaigns.map((campaign) => (
               <li key={campaign.campaignId}>
-                <div className="px-4 py-4 flex items-center justify-between sm:px-6">
-                  <div className="flex items-center">
-                    <div className="min-w-0 flex-1 sm:flex sm:items-center sm:justify-between">
-                      <div>
-                        <div className="flex text-sm">
-                          <p className="font-medium text-blue-600 truncate">
-                            {campaign.campaignName || 'Untitled Campaign'}
-                          </p>
-                          <p className="ml-1 font-normal text-gray-500">
-                            ({campaign.campaignId})
-                          </p>
-                        </div>
-                        <div className="mt-2 flex flex-col space-y-1">
-                          <div className="flex items-center text-sm text-gray-500">
-                            <p>Template: {campaign.templateName}</p>
-                          </div>
-                          <div className="flex items-center text-sm text-gray-500">
-                            <p>Partner: {campaign.cmPartner}</p>
-                          </div>
-                        </div>
-                      </div>
+                <button
+                  onClick={() => onLoadCampaign(campaign)}
+                  className="w-full text-left hover:bg-gray-50 p-4"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-blue-600">
+                        {campaign.campaignId}
+                      </p>
+                      <p className="text-sm text-gray-900 mt-1">
+                        {campaign.campaignName}
+                      </p>
                     </div>
+                    <ChevronRight className="h-5 w-5 text-gray-400" />
                   </div>
-                  <div className="ml-5 flex-shrink-0 flex space-x-2">
-                    <button
-                      onClick={() => onLoadCampaign(campaign)}
-                      className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                    >
-                      Load
-                    </button>
-                    <button
-                      onClick={() => {
-                        const savedCampaigns = JSON.parse(localStorage.getItem('campaigns') || '[]');
-                        const updatedCampaigns = savedCampaigns.filter(c => c.campaignId !== campaign.campaignId);
-                        localStorage.setItem('campaigns', JSON.stringify(updatedCampaigns));
-                        setCampaigns(campaigns.filter(c => c.campaignId !== campaign.campaignId));
-                      }}
-                      className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
+                </button>
               </li>
             ))}
           </ul>
@@ -1486,6 +1518,9 @@ const WebOfferTilePreview = ({ formData, selectedOfferIndex }) => {
 };
 
 const WebOfferTileView = ({ formData, handleInputChange }) => {
+  // Add state for selectedOfferIndex
+  const [selectedOfferIndex, setSelectedOfferIndex] = useState(0);
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-8">
       <div className="lg:col-span-4 space-y-4">
