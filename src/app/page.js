@@ -1,7 +1,7 @@
 /* eslint-disable react/no-unescaped-entities */
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowRight, Mail, Clock, FileText, Download, Bold, Italic, List, ChevronRight, Home, ArrowUp, Link, ArrowLeft } from "lucide-react";
+import { ArrowRight, Mail, Clock, FileText, Download, Bold, Italic, List, ChevronRight, Home, ArrowUp, Link, ArrowLeft, Bell, Upload, Search } from "lucide-react";
 import Papa from 'papaparse';
 import NotificationPreview from '../components/NotificationPreview';
 // Basic HTML Editor Component
@@ -285,54 +285,88 @@ const HomePage = ({ onSelectForm, onSearch, onLoadCsvBrief }) => {
 
   return (
     <Layout currentPage="Home" onNavigate={() => {}}>
-      <div className="flex-grow flex items-center justify-center">
-        <div className="max-w-4xl w-full space-y-8 px-4 sm:px-6">
+      <div className="flex-grow flex items-center justify-center bg-gradient-to-b from-gray-50 to-white">
+        <div className="max-w-5xl w-full space-y-12 px-4 sm:px-6 py-16">
+          {/* Header Section */}
           <div className="text-center space-y-4">
-            <h1 className="text-4xl font-bold text-gray-900">Campaign Form Generator</h1>
-            <p className="text-lg text-gray-600">Select the type of form you want to generate or search for an existing campaign</p>
+            <h1 className="text-5xl font-bold text-gray-900 tracking-tight">
+              Campaign Form Generator
+            </h1>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Create, manage, and organize your campaign briefs efficiently
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          {/* Search Bar */}
+          <div className="max-w-2xl mx-auto">
+            <form onSubmit={handleSearch} className="flex items-center">
+              <div className="relative flex-grow">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search by Campaign ID"
+                  className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-l-xl focus:outline-none focus:border-blue-500 focus:ring-0 text-gray-900 placeholder-gray-500"
+                />
+              </div>
+              <button
+                type="submit"
+                className="px-6 py-3 bg-blue-600 text-white rounded-r-xl hover:bg-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                Search
+              </button>
+            </form>
+          </div>
+
+          {/* Cards Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* EDM Card */}
             <div 
-              className="bg-white p-6 space-y-4 rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer"
               onClick={() => onSelectForm('edm')}
+              className="group relative bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-200 overflow-hidden cursor-pointer border border-gray-100"
             >
-              <div className="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Mail className="h-6 w-6 text-blue-600" />
-              </div>
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900">EDM</h2>
-                <p className="text-sm text-gray-600 mt-2">Generate email templates for your EDM campaigns</p>
-              </div>
-              <div className="flex items-center text-blue-600">
-                <span className="text-sm font-medium">Get started</span>
-                <ArrowRight className="h-4 w-4 ml-2" />
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+              <div className="relative p-6 space-y-4">
+                <div className="h-12 w-12 bg-blue-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                  <Mail className="h-6 w-6 text-blue-600" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900">Create EDM Brief</h2>
+                  <p className="mt-2 text-gray-600">Generate email templates for your EDM campaigns</p>
+                </div>
+                <div className="flex items-center text-blue-600 group-hover:translate-x-2 transition-transform duration-200">
+                  <span className="text-sm font-medium">Get started</span>
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </div>
               </div>
             </div>
 
-            {/* Modified Push Notification Card (replacing WOT Card) */}
+            {/* Push Notification Card */}
             <div 
-              className="bg-white p-6 space-y-4 rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer"
               onClick={() => onSelectForm('notification')}
+              className="group relative bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-200 overflow-hidden cursor-pointer border border-gray-100"
             >
-              <div className="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <Clock className="h-6 w-6 text-green-600" />
-              </div>
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900">Push Notification Preview</h2>
-                <p className="text-sm text-gray-600 mt-2">Preview push notification appearance</p>
-              </div>
-              <div className="flex items-center text-green-600">
-                <span className="text-sm font-medium">Get started</span>
-                <ArrowRight className="h-4 w-4 ml-2" />
+              <div className="absolute inset-0 bg-gradient-to-r from-green-500/5 to-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+              <div className="relative p-6 space-y-4">
+                <div className="h-12 w-12 bg-green-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                  <Bell className="h-6 w-6 text-green-600" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900">Push Notification Preview</h2>
+                  <p className="mt-2 text-gray-600">Preview push notification appearance</p>
+                </div>
+                <div className="flex items-center text-green-600 group-hover:translate-x-2 transition-transform duration-200">
+                  <span className="text-sm font-medium">Get started</span>
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </div>
               </div>
             </div>
 
-            {/* Modified Upload Existing Brief card */}
+            {/* Upload Brief Card */}
             <div 
-              className="bg-white p-6 space-y-4 rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer"
               onClick={handleUploadClick}
+              className="group relative bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-200 overflow-hidden cursor-pointer border border-gray-100"
             >
               <input
                 type="file"
@@ -341,37 +375,21 @@ const HomePage = ({ onSelectForm, onSearch, onLoadCsvBrief }) => {
                 accept=".csv"
                 onChange={handleFileUpload}
               />
-              <div className="h-12 w-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                <FileText className="h-6 w-6 text-purple-600" />
-              </div>
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900">Upload Existing Brief</h2>
-                <p className="text-sm text-gray-600 mt-2">Upload and edit previously exported campaign briefs</p>
-              </div>
-              <div className="flex items-center text-purple-600">
-                <span className="text-sm font-medium">Upload CSV</span>
-                <ArrowRight className="h-4 w-4 ml-2" />
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+              <div className="relative p-6 space-y-4">
+                <div className="h-12 w-12 bg-purple-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                  <Upload className="h-6 w-6 text-purple-600" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900">Upload Existing Brief</h2>
+                  <p className="mt-2 text-gray-600">Upload and edit previously exported campaign briefs</p>
+                </div>
+                <div className="flex items-center text-purple-600 group-hover:translate-x-2 transition-transform duration-200">
+                  <span className="text-sm font-medium">Upload CSV</span>
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </div>
               </div>
             </div>
-          </div>
-
-          {/* Search section with improved padding */}
-          <div className="mt-8 px-4 sm:px-0">
-            <form onSubmit={handleSearch} className="flex items-center">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Enter Campaign ID"
-                className="flex-grow px-4 py-2 border rounded-l focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <button
-                type="submit"
-                className="px-4 py-2 bg-blue-600 text-white rounded-r hover:bg-blue-700 transition-colors"
-              >
-                Search
-              </button>
-            </form>
           </div>
         </div>
       </div>
