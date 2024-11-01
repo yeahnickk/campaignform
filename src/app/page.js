@@ -275,13 +275,13 @@ const HomePage = ({ onSelectForm, onSearch, onLoadCsvBrief }) => {
   return (
     <Layout currentPage="Home" onNavigate={() => {}}>
       <div className="flex-grow flex items-center justify-center">
-        <div className="max-w-4xl w-full space-y-8">
+        <div className="max-w-4xl w-full space-y-8 px-4 sm:px-6">
           <div className="text-center space-y-4">
             <h1 className="text-4xl font-bold text-gray-900">Campaign Form Generator</h1>
             <p className="text-lg text-gray-600">Select the type of form you want to generate or search for an existing campaign</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {/* EDM Card */}
             <div 
               className="bg-white p-6 space-y-4 rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer"
@@ -344,8 +344,8 @@ const HomePage = ({ onSelectForm, onSearch, onLoadCsvBrief }) => {
             </div>
           </div>
 
-          {/* Search section remains the same */}
-          <div className="mt-8">
+          {/* Search section with improved padding */}
+          <div className="mt-8 px-4 sm:px-0">
             <form onSubmit={handleSearch} className="flex items-center">
               <input
                 type="text"
@@ -1293,8 +1293,8 @@ const OffersView = ({ formData, handleInputChange }) => {
 
 const FormView = ({ formData, handleInputChange }) => {
   return (
-    <div className="grid grid-cols-12 gap-8">
-      <div className="col-span-4 space-y-4">
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-8">
+      <div className="lg:col-span-4 space-y-4">
         <div className="bg-white p-6 rounded-lg shadow">
           <div className="space-y-4">
             {/* Campaign ID */}
@@ -1403,7 +1403,7 @@ const FormView = ({ formData, handleInputChange }) => {
           </div>
         </div>
       </div>
-      <div className="col-span-8">
+      <div className="lg:col-span-8">
         <div className="bg-white p-6 rounded-lg shadow">
           <h2 className="text-xl font-semibold mb-4">Email Preview</h2>
           <IframeEmailPreview 
@@ -1486,11 +1486,9 @@ const WebOfferTilePreview = ({ formData, selectedOfferIndex }) => {
 };
 
 const WebOfferTileView = ({ formData, handleInputChange }) => {
-  const [selectedOfferIndex, setSelectedOfferIndex] = useState(0);
-
   return (
-    <div className="grid grid-cols-12 gap-8">
-      <div className="col-span-4 space-y-4">
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-8">
+      <div className="lg:col-span-4 space-y-4">
         <div className="bg-white p-6 rounded-lg shadow">
           <div className="space-y-4">
             {formData.offerCount > 0 ? (
@@ -1518,7 +1516,7 @@ const WebOfferTileView = ({ formData, handleInputChange }) => {
           </div>
         </div>
       </div>
-      <div className="col-span-8">
+      <div className="lg:col-span-8">
         <div className="bg-white p-6 rounded-lg shadow">
           <h2 className="text-xl font-semibold mb-4">Web Offer Tile Preview</h2>
           {formData.offerCount > 0 ? (
