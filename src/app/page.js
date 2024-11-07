@@ -629,7 +629,7 @@ const IframeEmailPreview = ({ formData, partner, template }) => {
           const response = await fetch(templatePath);
           let html = await response.text();
           
-          // Get selected offer data
+          // Get selected offer data with all possible variables
           const selectedOffer = {
             id: formData[`offerId${selectedOfferIndex}`],
             spend: formData[`offerSpend${selectedOfferIndex}`],
@@ -639,21 +639,35 @@ const IframeEmailPreview = ({ formData, partner, template }) => {
             endDate: formData[`offerEndDate${selectedOfferIndex}`],
             imageUrl: formData[`wotImageUrl${selectedOfferIndex}`]
           };
+
+          // Debug log
+          console.log('Email Preview Selected Offer Data:', selectedOffer);
           
-          // Replace placeholders
+          // Replace all placeholders
           html = html
-            .replace('$HEADER$', formData?.header || '')
-            .replace('$HERO_IMAGE$', formData?.heroImage || '')
-            .replace('$EMAIL_CONTENT$', formData?.emailContent || '')
-            .replace('$MAINCTATEXT$', formData?.ctaText || '')
-            // Add offer placeholders
-            .replace('$OFFER_ID$', selectedOffer.id || '')
-            .replace('$OFFER_SPEND$', selectedOffer.spend || '')
-            .replace('$OFFER_GET$', selectedOffer.get || '')
-            .replace('$OFFER_TITLE$', selectedOffer.title || '')
-            .replace('$OFFER_START_DATE$', selectedOffer.startDate || '')
-            .replace('$OFFER_END_DATE$', selectedOffer.endDate || '')
-            .replace('$OFFER_IMAGE$', selectedOffer.imageUrl || '');
+            // General email placeholders
+            .replace(/\$HEADER\$/g, formData?.header || '')
+            .replace(/\$HERO_IMAGE\$/g, formData?.heroImage || '')
+            .replace(/\$EMAIL_CONTENT\$/g, formData?.emailContent || '')
+            .replace(/\$MAINCTATEXT\$/g, formData?.ctaText || '')
+            
+            // Offer-specific placeholders
+            .replace(/\$OFFERID\$/g, selectedOffer.id || '')
+            .replace(/\$OFFERSPEND\$/g, selectedOffer.spend || '')
+            .replace(/\$OFFERGET\$/g, selectedOffer.get || '')
+            .replace(/\$OFFERTITLE\$/g, selectedOffer.title || '')
+            .replace(/\$OFFERSTARTDATE\$/g, selectedOffer.startDate || '')
+            .replace(/\$OFFERENDDATE\$/g, selectedOffer.endDate || '')
+            .replace(/\$WOTIMAGEURL\$/g, selectedOffer.imageUrl || '')
+            
+            // Additional offer-related placeholders if needed
+            .replace(/\$OFFER_ID\$/g, selectedOffer.id || '')
+            .replace(/\$OFFER_SPEND\$/g, selectedOffer.spend || '')
+            .replace(/\$OFFER_GET\$/g, selectedOffer.get || '')
+            .replace(/\$OFFER_TITLE\$/g, selectedOffer.title || '')
+            .replace(/\$OFFER_START_DATE\$/g, selectedOffer.startDate || '')
+            .replace(/\$OFFER_END_DATE\$/g, selectedOffer.endDate || '')
+            .replace(/\$OFFER_IMAGE\$/g, selectedOffer.imageUrl || '');
 
           // Add email client and color scheme styles
           html = html.replace('</head>',
@@ -1670,31 +1684,30 @@ const WebOfferTilePreview = ({ formData, selectedOfferIndex }) => {
         const response = await fetch(templatePath);
         let html = await response.text();
         
-        // Create an object with the actual values from the form
+        // Get the selected offer data
         const selectedOffer = {
           offerGet: formData[`offerGet${selectedOfferIndex}`],
           offerSpend: formData[`offerSpend${selectedOfferIndex}`],
           offerTitle: formData[`offerTitle${selectedOfferIndex}`],
           offerEndDate: formData[`offerEndDate${selectedOfferIndex}`],
-          offerStartDate: formData[`offerStartDate${selectedOfferIndex}`],
           offerId: formData[`offerId${selectedOfferIndex}`],
           wotImageUrl: formData[`wotImageUrl${selectedOfferIndex}`]
         };
 
-        // Replace each placeholder with its corresponding value
+        // Debug log to check values
+        console.log('Selected Offer Data:', selectedOffer);
+
+        // Replace placeholders with exact matches from template
         html = html
           .replace(/\$OFFERGET\$/g, selectedOffer.offerGet || '')
           .replace(/\$OFFERSPEND\$/g, selectedOffer.offerSpend || '')
-          .replace(/\$OFFERTITLE\$/g, selectedOffer.offerTitle || '')
           .replace(/\$OFFERENDDATE\$/g, selectedOffer.offerEndDate || '')
-          .replace(/\$OFFERSTARTDATE\$/g, selectedOffer.offerStartDate || '')
-          .replace(/\$OFFERID\$/g, selectedOffer.offerId || '')
           .replace(/\$WOTIMAGEURL\$/g, selectedOffer.wotImageUrl || '');
-        
+
         setIframeContent(html);
-        setIsLoading(false);
       } catch (error) {
         console.error('Error loading WOT template:', error);
+      } finally {
         setIsLoading(false);
       }
     };
